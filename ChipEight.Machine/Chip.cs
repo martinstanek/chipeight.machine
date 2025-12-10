@@ -16,7 +16,7 @@ public sealed class Chip
 
     public void Execute(byte[] program)
     {
-        var chunks = program.Chunk(4);
+        var chunks = program.Chunk(2);
 
         foreach (var chunk in chunks)
         {

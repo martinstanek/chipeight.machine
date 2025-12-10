@@ -9,6 +9,6 @@ public sealed class Tests
     {
         var chip = new Chip();
         
-        chip.Execute(new byte[] {0, 0, 0, 0});
+        chip.Execute(new byte[] {0, 0});
     }
 }
