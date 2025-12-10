@@ -5,13 +5,25 @@ namespace ChipEight.Machine;
 
 public sealed class Chip
 {
-    private readonly Registers _registers = new();
     private readonly Memory _memory = new();
+    private readonly Registers _registers = new();
     private readonly InstructionSet _instructionSet = new();
 
     public Chip()
     {
         _instructionSet.Register(new InstructionNull(this));
+    }
+
+    public void Execute(byte[] program)
+    {
+        var chunks = program.Chunk(4);
+
+        foreach (var chunk in chunks)
+        {
+            var machineCode = System.BitConverter.ToUInt16(chunk);
+            
+            _instructionSet.Execute(machineCode);
+        }
     }
 }
 
@@ -22,16 +34,19 @@ public sealed class Memory
 
 public sealed class Registers
 {
-    private ushort[] _stack = new ushort[16];
-    private byte[] _general = new byte[15];
-    private byte _flag = 0;
+    private readonly ushort[] _stack = new ushort[16];
+    private readonly byte[] _general = new byte[16];
     private ushort _i = 0;
-    private ushort _pc = 0;
+    private ushort _pc = 0x200;
     private byte _sp = 0;
     private byte _dt = 0;
     private byte _st = 0;
 
-    public bool[] Flags => Essentials.FromByte(_flag);
+    public void Push(ushort value) => _stack[_sp++] = value;
+    
+    public ushort Pop() => _stack[--_sp];
+    
+    public bool[] Flags => Essentials.FromByte(_general[15]);
 
     public ushort I
     {
@@ -75,11 +90,11 @@ public sealed class InstructionSet
         return this;
     }
 
-    public void Execute(byte[] machineCode)
+    public void Execute(ushort machineCode)
     {
-        var instruction = _instructions.Single(i => i.IsApplicable(machineCode));
+        var instruction = _instructions.Single(i => i.CanExecute(machineCode));
         
-        instruction.Execute();
+        instruction.Execute(machineCode);
     }
 }
 
@@ -92,16 +107,16 @@ public abstract class Instruction
         _chip = chip;
     }
     
-    public abstract void Execute();
+    public abstract void Execute(ushort machineCode);
 
-    public abstract bool IsApplicable(byte[] machineCode);
+    public abstract bool CanExecute(ushort machineCode);
 }
 
 public sealed class InstructionNull : Instruction
 {
     public InstructionNull(Chip chip) : base(chip) { }
 
-    public override void Execute() { }
+    public override void Execute(ushort maschineCode) { }
 
-    public override bool IsApplicable(byte[] machineCode) => machineCode.Equals(new[] { 0, 0, 0, 0 });
+    public override bool CanExecute(ushort machineCode) => machineCode == 0;
 }
