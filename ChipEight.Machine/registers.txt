@@ -1,0 +1,50 @@
+V0
+V1
+V2
+V3
+V4
+V5
+V6
+V7
+V8
+V9
+VA
+VB
+VC
+VD
+VE
+VF   ← special (used as a flag)
+
+-----
+
+I-register (memory register)
+
+I     16-bit address register (0x000–0xFFF)
+
+-----
+
+Program-Counter
+
+PC    16-bit (points to next instruction)
+
+-----
+
+Stack-Pointer
+
+SP    8-bit (0–15)
+
+-----
+
+Stack
+
+STACK[16]   each entry is 16-bit
+
+-----
+
+Timers
+
+DelayTimer   (DT)   8-bit
+SoundTimer   (ST)   8-bit
+
+----------------
+
