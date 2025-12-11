@@ -32,3 +32,6 @@ FX29 i := hex vx Set i to a hex character
 FX33 bcd vx Decode vx into binary-coded decimal
 FX55 save vx Save v0-vx to i through (i+x)
 FX65 load vx Load v0-vx from i through (i+x)
+
+
+https://github.com/Timendus/chip8-test-suite?tab=readme-ov-file

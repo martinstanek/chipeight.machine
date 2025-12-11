@@ -14,7 +14,9 @@ public sealed class Chip
     
     public Chip()
     {
-        _instructionSet.Register(new InstructionClear(this));
+        _instructionSet
+            .Register(new InstructionClear(this))
+            .Register(new InstructionDrawSprite(this));
     }
 
     public void Load(byte[] program)
@@ -111,6 +113,15 @@ public sealed class Registers
 public sealed class Display
 {
     public void Clear() { }
+
+    public void SetPixel(byte x, byte y, bool on)
+    {
+    }
+
+    public bool GetPixel(byte x, byte y)
+    {
+        return false;
+    }
 }
 
 public sealed class Keyboard { }
@@ -160,4 +171,19 @@ public sealed class InstructionClear : Instruction
     }
 
     public override bool CanExecute(ushort machineCode) => machineCode == 0x00E0;
+}
+
+public sealed class InstructionDrawSprite : Instruction
+{
+    public InstructionDrawSprite(Chip chip) : base(chip) { }
+
+    public override void Execute(ushort machineCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool CanExecute(ushort machineCode)
+    {
+        throw new NotImplementedException();
+    }
 }
