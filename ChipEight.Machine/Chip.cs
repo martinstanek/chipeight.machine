@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ChipEight.Machine;
 
@@ -15,8 +16,8 @@ public sealed class Chip
     public Chip()
     {
         _instructionSet
-            .Register(new InstructionClear(this))
-            .Register(new InstructionDrawSprite(this));
+            .Register(new InstructionClear(this));
+            //.Register(new InstructionDrawSprite(this));
     }
 
     public void Load(byte[] program)
@@ -24,7 +25,21 @@ public sealed class Chip
         _memory.Load(program, 0x200);
     }
 
-    public void Run() { }
+    public void Run(ushort cycles)
+    {
+        for (var s = 0; s < cycles; s++)
+        {
+            Step();
+        }
+    }
+    
+    public void Run(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {   
+            Step();
+        }
+    }
 
     public void Step()
     {
@@ -112,10 +127,16 @@ public sealed class Registers
 
 public sealed class Display
 {
-    public void Clear() { }
+    private readonly PixelDisplayClient _pixelDisplay = new();
+
+    public void Clear()
+    {
+        _pixelDisplay.ClearDisplay();
+    }
 
     public void SetPixel(byte x, byte y, bool on)
     {
+        _pixelDisplay.SetPixel(x, y, on);
     }
 
     public bool GetPixel(byte x, byte y)

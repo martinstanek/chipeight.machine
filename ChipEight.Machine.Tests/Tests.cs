@@ -11,7 +11,7 @@ public sealed class Tests
         var chip = new Chip();
         
         chip.Load([0x00, 0xE0]);
-        chip.Step();
+        chip.Run(cycles: 1);
         
         chip.Registers.Pc.ShouldBe((ushort) 0x202);
     }
