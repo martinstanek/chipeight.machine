@@ -21,4 +21,11 @@
       <ProjectReference Include="..\ChipEight.Machine\ChipEight.Machine.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Roms\1-chip8-logo.ch8" />
+      <Resource Include="Roms\1-chip8-logo.ch8">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
 </Project>

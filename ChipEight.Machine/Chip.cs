@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace ChipEight.Machine;
@@ -15,9 +13,10 @@ public sealed class Chip
     
     public Chip()
     {
-        _instructionSet
-            .Register(new InstructionClear(this));
-            //.Register(new InstructionDrawSprite(this));
+        _instructionSet.RegisterPrimary(0x0, new InstructionClear(this));
+        _instructionSet.RegisterPrimary(0x6, new InstructionLoadVxImmediate(this));
+        _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
+        _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
     }
 
     public void Load(byte[] program)
@@ -26,8 +25,8 @@ public sealed class Chip
     }
 
     public void Run(ushort cycles)
-    {
-        for (var s = 0; s < cycles; s++)
+    {   
+        for (var c = 0; c < cycles; c++)
         {
             Step();
         }
@@ -76,6 +75,8 @@ public sealed class Memory
     {
         return (ushort) ( (_memory[programCounter] << 8) | _memory[programCounter + 1] );
     }
+
+    public byte[] Raw => _memory;
 }
 
 public sealed class Registers
@@ -123,6 +124,8 @@ public sealed class Registers
         get => _st;
         set { _st = value; }
     }
+
+    public byte[] V => _general;
 }
 
 public sealed class Display
@@ -139,6 +142,11 @@ public sealed class Display
         _pixelDisplay.SetPixel(x, y, on);
     }
 
+    public void DrawSprite(byte x, byte y, byte[] sprite)
+    {
+        _pixelDisplay.DrawSprite(x, y, sprite);
+    }
+
     public bool GetPixel(byte x, byte y)
     {
         return false;
@@ -149,20 +157,25 @@ public sealed class Keyboard { }
 
 public sealed class InstructionSet
 {
-    private readonly List<Instruction> _instructions = new();
-    
-    public InstructionSet Register(Instruction instruction)
-    {
-        _instructions.Add(instruction);
+    private readonly Instruction[] _primarySet = new Instruction[16];
 
-        return this;
+    public void RegisterPrimary(byte index, Instruction instruction)
+    {
+        _primarySet[index] = instruction;
     }
-
-    public void Execute(ushort machineCode)
+    
+    public void Execute(ushort opcode)
     {
-        var instruction = _instructions.Single(i => i.CanExecute(machineCode));
+        var high = (byte) (opcode >> 12);
+        var handler = _primarySet[high];
         
-        instruction.Execute(machineCode);
+        if (handler.CanExecute(opcode))
+        {
+            handler.Execute(opcode);
+            return;
+        }
+
+        throw new InvalidOperationException($"Unknown opcode: 0x{opcode:X4}");
     }
 }
 
@@ -175,9 +188,9 @@ public abstract class Instruction
         _chip = chip;
     }
     
-    public abstract void Execute(ushort machineCode);
+    public abstract void Execute(ushort opcode);
 
-    public abstract bool CanExecute(ushort machineCode);
+    public abstract bool CanExecute(ushort opcode);
 
     protected Chip Chip => _chip;
 }
@@ -186,25 +199,67 @@ public sealed class InstructionClear : Instruction
 {
     public InstructionClear(Chip chip) : base(chip) { }
 
-    public override void Execute(ushort maschineCode)
+    public override void Execute(ushort opcode)
     {
         Chip.Display.Clear();
     }
 
-    public override bool CanExecute(ushort machineCode) => machineCode == 0x00E0;
+    public override bool CanExecute(ushort opcode) => opcode == 0x00E0;
+}
+
+public sealed class InstructionLoadVxImmediate : Instruction
+{
+    public InstructionLoadVxImmediate(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x6000;
+    }
+
+    public override void Execute(ushort opcode)
+    {
+        var x = (byte) ((opcode & 0x0F00) >> 8);
+        var nn = (byte) (opcode & 0x00FF);
+
+        Chip.Registers.V[x] = nn;
+    }
+}
+
+public sealed class InstructionAddressToI : Instruction
+{
+    public InstructionAddressToI(Chip chip) : base(chip) { }
+    
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xA000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var nnn = (ushort) (opcode & 0x0FFF);
+
+        Chip.Registers.I = nnn;
+    }
 }
 
 public sealed class InstructionDrawSprite : Instruction
 {
     public InstructionDrawSprite(Chip chip) : base(chip) { }
 
-    public override void Execute(ushort machineCode)
+    public override bool CanExecute(ushort opcode)
     {
-        throw new NotImplementedException();
+        return (opcode & 0xF000) == 0xD000;
     }
-
-    public override bool CanExecute(ushort machineCode)
+    
+    public override void Execute(ushort opcode)
     {
-        throw new NotImplementedException();
+        var xReg = (opcode & 0x0F00) >> 8;
+        var yReg = (opcode & 0x00F0) >> 4;
+        var n = (opcode & 0x000F);
+        var x = Chip.Registers.V[xReg];
+        var y = Chip.Registers.V[yReg];
+        var sprite = new Span<byte>(Chip.Memory.Raw, Chip.Registers.I, n);
+
+        Chip.Display.DrawSprite(x, y, sprite.ToArray());
     }
 }
