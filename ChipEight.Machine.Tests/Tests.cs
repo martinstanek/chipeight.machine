@@ -26,4 +26,14 @@ public sealed class Tests
         chip.Load(rom);
         chip.Run(cycles: 39);
     }
+    
+    [Fact]
+    public void Chip_IbmRom()
+    {
+        var rom = File.ReadAllBytes("/Users/martinstanek/Documents/dev/git/martinstanek/chipeight.machine/ChipEight.Machine.Tests/Roms/2-ibm-logo.ch8");
+        var chip = new Chip();
+        
+        chip.Load(rom);
+        chip.Run(cycles: 20);
+    }
 }

@@ -17,6 +17,7 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x6, new InstructionLoadVxImmediate(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
+        _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
     }
 
     public void Load(byte[] program)
@@ -261,5 +262,25 @@ public sealed class InstructionDrawSprite : Instruction
         var sprite = new Span<byte>(Chip.Memory.Raw, Chip.Registers.I, n);
 
         Chip.Display.DrawSprite(x, y, sprite.ToArray());
+    }
+}
+
+public sealed class InstructionAddImmediateValueToRegister: Instruction
+{
+    public InstructionAddImmediateValueToRegister(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x7000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        
+        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var valKk = Chip.Registers.V[reg];
+        var kk = (byte) (opcode & 0x00FF);
+
+        Chip.Registers.V[reg] = (byte) (valKk + kk);
     }
 }
