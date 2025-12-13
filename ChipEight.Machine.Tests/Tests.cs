@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
 using Shouldly;
 using Xunit;
 
@@ -15,6 +17,17 @@ public sealed class Tests
         chip.Run(cycles: 1);
         
         chip.Registers.Pc.ShouldBe((ushort) 0x202);
+    }
+    
+    [Fact]
+    public void Chip_Jump()
+    {
+        var chip = new Chip();
+        
+        chip.Load([0x12, 0x06]);
+        chip.Run(cycles: 1);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x206);
     }
     
     [Fact]
@@ -42,6 +55,17 @@ public sealed class Tests
         
         chip.Load(rom);
         chip.Run(cycles: 39);
+    }
+    
+    [Fact]
+    public void Chip_FirstRom_Loop()
+    {
+        var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
+        var chip = new Chip();
+        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        
+        chip.Load(rom);
+        chip.Run(cancellation.Token);
     }
     
     [Fact]
