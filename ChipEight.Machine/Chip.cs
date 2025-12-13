@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace ChipEight.Machine;
 
@@ -193,19 +192,28 @@ public sealed class Display
 
     private bool DrawSpriteInternal(byte x, byte y, byte[] sprite)
     {
+        var collisionDetected = false;
+        
         for (var s = 0; s < sprite.Length; s++)
         {
             var spritePixels = Essentials.ByteToBooleans(sprite[s]);
 
             for (var p = 0; p < spritePixels.Length; p++)
             {
-                var xor = _pixels[x + p, y + s] ^ spritePixels[p];
+                var currentValue = _pixels[x + p, y + s];
+                var newValue = spritePixels[p];
+                var xor = currentValue ^ newValue;
+
+                if (currentValue && newValue)
+                {
+                    collisionDetected = true;
+                }
 
                 _pixels[x + p, y + s] = xor;
             }
         }
 
-        return false;
+        return collisionDetected;
     }
 }
 
@@ -321,7 +329,14 @@ public sealed class InstructionDrawSprite : Instruction
         var y = Chip.Registers.V[yReg];
         var sprite = new Span<byte>(Chip.Memory.Raw, Chip.Registers.I, n);
 
-        Chip.Display.DrawSprite(x, y, sprite.ToArray());
+        Chip.Registers.V[0xF] = 0x0;
+        
+        var collisionDetected = Chip.Display.DrawSprite(x, y, sprite.ToArray());
+
+        if (collisionDetected)
+        {
+            Chip.Registers.V[0xF] = 0x1;
+        }
     }
 }
 

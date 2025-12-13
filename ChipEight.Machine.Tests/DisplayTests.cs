@@ -7,7 +7,7 @@ namespace ChipEight.Machine.Tests;
 public sealed class DisplayTests
 {
     [Fact]
-    public void InitialState_AllPixelsOff()
+    public void InitialState_AllPixelsAreOff()
     {
         var remoteDisplay = new Mock<IRemoteDisplay>();
         var display = new Display(remoteDisplay.Object);
@@ -27,7 +27,7 @@ public sealed class DisplayTests
         var remoteDisplay = new Mock<IRemoteDisplay>();
         var display = new Display(remoteDisplay.Object);
 
-        display.DrawSprite(0, 0, [0x81, 0xFF, 0x00, 0x81]);
+        var collision = display.DrawSprite(0, 0, [0x81, 0xFF, 0x00, 0x81]);
         
         display.GetPixel(0, 0).ShouldBeTrue();
         display.GetPixel(7, 0).ShouldBeTrue();
@@ -43,6 +43,8 @@ public sealed class DisplayTests
         display.GetPixel(7, 2).ShouldBeFalse();
         display.GetPixel(0, 3).ShouldBeTrue();
         display.GetPixel(7, 3).ShouldBeTrue();
+        
+        collision.ShouldBeFalse();
     }
     
     [Fact]
@@ -52,7 +54,7 @@ public sealed class DisplayTests
         var display = new Display(remoteDisplay.Object);
 
         display.DrawSprite(0, 0, [0x81, 0xFF, 0x00, 0x81]);
-        display.DrawSprite(0, 0, [0x81, 0xFF, 0x00, 0x81]);
+        var collision = display.DrawSprite(0, 0, [0x81, 0xFF, 0x00, 0x81]);
         
         display.GetPixel(0, 0).ShouldBeFalse();
         display.GetPixel(7, 0).ShouldBeFalse();
@@ -68,15 +70,25 @@ public sealed class DisplayTests
         display.GetPixel(7, 2).ShouldBeFalse();
         display.GetPixel(0, 3).ShouldBeFalse();
         display.GetPixel(7, 3).ShouldBeFalse();
+        
+        collision.ShouldBeTrue();
     }
     
     [Fact]
     public void DrawSprites_CollisionDetected()
     {
+        var remoteDisplay = new Mock<IRemoteDisplay>();
+        var display = new Display(remoteDisplay.Object);
+
+        var collision1 = display.DrawSprite(0, 0, [0x81]);
+        var collision2 = display.DrawSprite(0, 0, [0x81]);
+        
+        collision1.ShouldBeFalse();
+        collision2.ShouldBeTrue();
     }
 
     [Fact]
-    public void Clear_AllPixelsOff()
+    public void DrawAndClear_AllPixelsAreOff()
     {
         var remoteDisplay = new Mock<IRemoteDisplay>();
         var display = new Display(remoteDisplay.Object);
