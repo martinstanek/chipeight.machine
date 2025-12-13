@@ -118,8 +118,6 @@ public sealed class Registers
     
     public ushort Pop() => _stack[--_sp];
     
-    public bool[] Flags => Essentials.ByteToBooleans(_general[15]);
-
     public ushort I
     {
         get => _i;
@@ -181,8 +179,11 @@ public sealed class Display
 
     public bool DrawSprite(byte x, byte y, byte[] sprite)
     {
+        var collisionDetected = DrawSpriteInternal(x, y, sprite);
+        
         _remoteDisplay.DrawSprite(x, y, sprite);
-        return DrawSpriteInternal(x, y, sprite);
+
+        return collisionDetected;
     }
     
     public bool GetPixel(byte x, byte y)
@@ -192,28 +193,32 @@ public sealed class Display
 
     private bool DrawSpriteInternal(byte x, byte y, byte[] sprite)
     {
-        var collisionDetected = false;
-        
-        for (var s = 0; s < sprite.Length; s++)
+        var collision = false;
+
+        for (var row = 0; row < sprite.Length; row++)
         {
-            var spritePixels = Essentials.ByteToBooleans(sprite[s]);
+            var spriteByte = sprite[row];
 
-            for (var p = 0; p < spritePixels.Length; p++)
+            for (var bit = 0; bit < 8; bit++)
             {
-                var currentValue = _pixels[x + p, y + s];
-                var newValue = spritePixels[p];
-                var xor = currentValue ^ newValue;
-
-                if (currentValue && newValue)
+                if ((spriteByte & (0x80 >> bit)) == 0)
                 {
-                    collisionDetected = true;
+                    continue;
                 }
 
-                _pixels[x + p, y + s] = xor;
+                var px = (x + bit) % Width;
+                var py = (y + row) % Height;
+
+                if (_pixels[px, py])
+                {
+                    collision = true;
+                }
+
+                _pixels[px, py] ^= true;
             }
         }
 
-        return collisionDetected;
+        return collision;
     }
 }
 
@@ -324,7 +329,7 @@ public sealed class InstructionDrawSprite : Instruction
     {
         var xReg = (opcode & 0x0F00) >> 8;
         var yReg = (opcode & 0x00F0) >> 4;
-        var n = (opcode & 0x000F);
+        var n = opcode & 0x000F;
         var x = Chip.Registers.V[xReg];
         var y = Chip.Registers.V[yReg];
         var sprite = new Span<byte>(Chip.Memory.Raw, Chip.Registers.I, n);
