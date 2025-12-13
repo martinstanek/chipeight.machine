@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ChipEight.Machine;
 
@@ -10,7 +11,7 @@ public sealed class Chip
     private readonly InstructionSet _instructionSet = new();
     private readonly Registers _registers = new();
     private readonly Keyboard _keyboard = new();
-    private readonly Display _display = new();
+    private readonly Display _display = new(new PixelDisplayClient());
     private readonly Memory _memory = new();
     
     public Chip()
@@ -118,7 +119,7 @@ public sealed class Registers
     
     public ushort Pop() => _stack[--_sp];
     
-    public bool[] Flags => Essentials.FromByte(_general[15]);
+    public bool[] Flags => Essentials.ByteToBooleans(_general[15]);
 
     public ushort I
     {
@@ -153,27 +154,57 @@ public sealed class Registers
     public byte[] V => _general;
 }
 
+public interface IRemoteDisplay
+{
+    void Clear();
+
+    void DrawSprite(byte x, byte y, byte[] sprite);
+}
+
 public sealed class Display
 {
-    private readonly PixelDisplayClient _pixelDisplay = new();
+    public const byte Width = 64;
+    public const byte Height = 32;
+
+    private readonly bool[,] _pixels = new bool[Width, Height];
+    private readonly IRemoteDisplay _remoteDisplay;
+
+    public Display(IRemoteDisplay remoteDisplay)
+    {
+        _remoteDisplay = remoteDisplay;
+    }
 
     public void Clear()
     {
-        _pixelDisplay.ClearDisplay();
+        Array.Clear(_pixels);
+        _remoteDisplay.Clear();
     }
 
-    public void SetPixel(byte x, byte y, bool on)
+    public bool DrawSprite(byte x, byte y, byte[] sprite)
     {
-        _pixelDisplay.SetPixel(x, y, on);
+        _remoteDisplay.DrawSprite(x, y, sprite);
+        return DrawSpriteInternal(x, y, sprite);
     }
-
-    public void DrawSprite(byte x, byte y, byte[] sprite)
-    {
-        _pixelDisplay.DrawSprite(x, y, sprite);
-    }
-
+    
     public bool GetPixel(byte x, byte y)
     {
+        return _pixels[x, y];
+    }
+
+    private bool DrawSpriteInternal(byte x, byte y, byte[] sprite)
+    {
+        for (var s = 0; s < sprite.Length; s++)
+        {
+            var spritePixels = Essentials.ByteToBooleans(sprite[s]);
+
+            for (var p = 0; p < spritePixels.Length; p++)
+            {
+                var xor = _pixels[x + p, y + s] ^ spritePixels[p];
+
+                _pixels[x + p, y + s] = xor;
+            }
+        }
+
         return false;
     }
 }

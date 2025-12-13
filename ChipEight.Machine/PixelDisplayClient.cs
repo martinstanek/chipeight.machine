@@ -3,7 +3,7 @@ using System.Net.Http;
 
 namespace ChipEight.Machine;
 
-public sealed class PixelDisplayClient
+public sealed class PixelDisplayClient : IRemoteDisplay
 {
     private const string RemoteDisplayUrl = "http://10.0.1.110:8090";
     
@@ -19,23 +19,11 @@ public sealed class PixelDisplayClient
         return httpClient;
     }
 
-    public void ClearDisplay()
+    public void Clear()
     {
         try
         {
             _httpClient.Value.GetAsync("/clear").GetAwaiter().GetResult();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-    }
-
-    public void SetPixel(byte x, byte y, bool state)
-    {
-        try
-        {
-            _httpClient.Value.GetAsync($"/set/{x}/{y}/{state}").GetAwaiter().GetResult();
         }
         catch (Exception e)
         {
