@@ -381,4 +381,26 @@ public sealed class Tests
         chip.Load(rom);
         chip.Run(cycles: 20);
     }
+
+    [Fact]
+    public void Chip_Rom_Corax()
+    {
+        var rom = File.ReadAllBytes("./Roms/3-corax+.ch8");
+        var chip = new Chip();
+        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        
+        chip.Load(rom);
+        chip.Run(cycles: 25);
+    }
+    
+    [Fact]
+    public void Chip_Rom_Flags()
+    {
+        var rom = File.ReadAllBytes("./Roms/4-flags.ch8");
+        var chip = new Chip();
+        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        
+        chip.Load(rom);
+        chip.Run(cancellation.Token);
+    }
 }

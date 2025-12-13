@@ -37,6 +37,7 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionF(this));
     }
 
     public void Load(byte[] program)
@@ -700,4 +701,16 @@ public sealed class InstructionRegistersShiftLeft : Instruction
     }
 }
 
+public sealed class InstructionF : Instruction
+{
+    public InstructionF(Chip chip) : base(chip) { }
 
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+    }
+}
