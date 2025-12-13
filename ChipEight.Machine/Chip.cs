@@ -28,6 +28,9 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x8, new InstructionRegistersMove(this));
         _instructionSet.RegisterPrimary(0x8, new InstructionRegistersOr(this));
         _instructionSet.RegisterPrimary(0x8, new InstructionRegistersAnd(this));
+        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersXor(this));
+        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersAdd(this));
+        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersSubtract(this));
         _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
@@ -569,3 +572,69 @@ public sealed class InstructionRegistersAnd : Instruction
         Chip.Registers.V[regX] = (byte) (valX & valY);
     }
 }
+
+public sealed class InstructionRegistersXor : Instruction
+{
+    public InstructionRegistersXor(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x8000 && (opcode & 0x000F) == 3;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
+        var valX = Chip.Registers.V[regX];
+        var valY = Chip.Registers.V[regY];
+
+        Chip.Registers.V[regX] = (byte) (valX ^ valY);
+    }
+}
+
+public sealed class InstructionRegistersAdd : Instruction
+{
+    public InstructionRegistersAdd(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x8000 && (opcode & 0x000F) == 4;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
+        var valX = Chip.Registers.V[regX];
+        var valY = Chip.Registers.V[regY];
+        var shouldCarry = valY + valX > 255;
+
+        Chip.Registers.V[regX] = (byte) (valX + valY);
+        Chip.Registers.V[0xF] = shouldCarry ? (byte) 0x1 : (byte) 0x0;
+    }
+}
+
+public sealed class InstructionRegistersSubtract : Instruction
+{
+    public InstructionRegistersSubtract(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x8000 && (opcode & 0x000F) == 5;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
+        var valX = Chip.Registers.V[regX];
+        var valY = Chip.Registers.V[regY];
+        var shouldNotBorrow = valX > valY;
+
+        Chip.Registers.V[regX] = (byte) (valX - valY);
+        Chip.Registers.V[0xF] = shouldNotBorrow ? (byte) 0x1 : (byte) 0x0;
+    }
+}
+
+
