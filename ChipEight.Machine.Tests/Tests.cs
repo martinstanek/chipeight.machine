@@ -137,6 +137,54 @@ public sealed class Tests
     }
 
     [Fact]
+    public void Chip_RegistersMove()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x05,
+            0x61, 0x03,
+            0x80, 0x10
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x03);
+    }
+    
+    [Fact]
+    public void Chip_RegistersOr()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x00,
+            0x61, 0xFF,
+            0x80, 0x11
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xFF);
+    }
+    
+    [Fact]
+    public void Chip_RegistersAnd()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0xFF,
+            0x61, 0xF0,
+            0x80, 0x12
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xF0);
+    }
+    
+    [Fact]
     public void Chip_Sprite()
     {
         var chip = new Chip();
