@@ -65,7 +65,77 @@ public sealed class Tests
         chip.Registers.Sp.ShouldBe((byte) 0);
         chip.Opcode.ShouldNotBeNull().ShouldBe((ushort) 0x600A );
     }
+
+    [Fact]
+    public void Chip_SkipIfEqual()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x05,
+            0x30, 0x05,
+            0x60, 0x01,
+            0x60, 0x02
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x02);
+    }
     
+    [Fact]
+    public void Chip_SkipIfNotEqual()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x05,
+            0x40, 0x04,
+            0x60, 0x01,
+            0x60, 0x02
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x02);
+    }
+    
+    [Fact]
+    public void Chip_SkipIfRegistersEqual()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x05,
+            0x61, 0x05,
+            0x50, 0x10,
+            0x60, 0x01,
+            0x60, 0x02
+        ]);
+        
+        chip.Run(cycles: 4);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x02);
+    }
+    
+    [Fact]
+    public void Chip_SkipIfRegistersNotEqual()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x05,
+            0x61, 0x03,
+            0x90, 0x10,
+            0x60, 0x01,
+            0x60, 0x02
+        ]);
+        
+        chip.Run(cycles: 4);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x02);
+    }
+
     [Fact]
     public void Chip_Sprite()
     {

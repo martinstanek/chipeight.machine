@@ -20,8 +20,12 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x0, new InstructionReturn(this));
         _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
         _instructionSet.RegisterPrimary(0x2, new InstructionCallAddress(this));
+        _instructionSet.RegisterPrimary(0x3, new InstructionSkipIfEqual(this));
+        _instructionSet.RegisterPrimary(0x4, new InstructionSkipIfNotEqual(this));
+        _instructionSet.RegisterPrimary(0x5, new InstructionSkipIfRegistersEqual(this));
         _instructionSet.RegisterPrimary(0x6, new InstructionLoadVxImmediate(this));
         _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
+        _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
     }
@@ -411,5 +415,95 @@ public sealed class InstructionReturn : Instruction
     public override void Execute(ushort opcode)
     {
         Chip.Registers.Pc = Chip.Registers.Pop();
+    }
+}
+
+public sealed class InstructionSkipIfEqual : Instruction
+{
+    public InstructionSkipIfEqual(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x3000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var regVal = Chip.Registers.V[reg];
+        var kk = (byte) (opcode & 0x00FF);
+
+        if (regVal == kk)
+        {
+            Chip.Registers.Pc += 2;
+        }
+    }
+}
+
+public sealed class InstructionSkipIfNotEqual : Instruction
+{
+    public InstructionSkipIfNotEqual(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x4000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var regVal = Chip.Registers.V[reg];
+        var kk = (byte) (opcode & 0x00FF);
+
+        if (regVal != kk)
+        {
+            Chip.Registers.Pc += 2;
+        }
+    }
+}
+
+public sealed class InstructionSkipIfRegistersEqual : Instruction
+{
+    public InstructionSkipIfRegistersEqual(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x5000 && (opcode & 0x000F) == 0;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) (opcode & 0x0F00) >> 8;
+        var regY = (byte) (opcode & 0x00F0) >> 4;
+        var valX = Chip.Registers.V[regX];
+        var valY = Chip.Registers.V[regY];
+        
+        if (valY == valX)
+        {
+            Chip.Registers.Pc += 2;
+        }
+    }
+}
+
+public sealed class InstructionSkipIfRegistersNotEqual : Instruction
+{
+    public InstructionSkipIfRegistersNotEqual(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x9000 && (opcode & 0x000F) == 0;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) (opcode & 0x0F00) >> 8;
+        var regY = (byte) (opcode & 0x00F0) >> 4;
+        var valX = Chip.Registers.V[regX];
+        var valY = Chip.Registers.V[regY];
+        
+        if (valY != valX)
+        {
+            Chip.Registers.Pc += 2;
+        }
     }
 }
