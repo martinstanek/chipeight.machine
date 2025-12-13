@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace ChipEight.Machine;
 
@@ -13,12 +15,15 @@ public sealed class Chip
     
     public Chip()
     {
+        // TODO: clean this up, ca be way less chatty
         _instructionSet.RegisterPrimary(0x0, new InstructionClear(this));
+        _instructionSet.RegisterPrimary(0x0, new InstructionReturn(this));
+        _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
+        _instructionSet.RegisterPrimary(0x2, new InstructionCallAddress(this));
         _instructionSet.RegisterPrimary(0x6, new InstructionLoadVxImmediate(this));
+        _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
-        _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
-        _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
     }
 
     public void Load(byte[] program)
@@ -44,11 +49,11 @@ public sealed class Chip
 
     public void Step()
     {
-        var opcode = _memory.GetOpcode(_registers.Pc);
+        Opcode = _memory.GetOpcode(_registers.Pc);
 
-        _registers.Pc += 2; // TODO not mutate directly?
+        _registers.Pc += 2;
 
-        _instructionSet.Execute(opcode);
+        _instructionSet.Execute(Opcode.Value);
     }
 
     public void Stop()
@@ -62,6 +67,20 @@ public sealed class Chip
     public Display Display => _display;
 
     public Keyboard Keyboard => _keyboard;
+
+    public ushort? Opcode { get; private set; }
+
+    public string ShowState()
+    {
+        var programCounterHex = Convert.ToHexString(BitConverter.GetBytes(Registers.Pc).Reverse().ToArray());
+        var stackPointerHex = Convert.ToHexString([Registers.Sp]);
+        var memoryRegisterHex = Convert.ToHexString(BitConverter.GetBytes(Registers.I).Reverse().ToArray());
+        var opcodeHex = Opcode != null
+            ? Convert.ToHexString(BitConverter.GetBytes(Opcode.Value).Reverse().ToArray())
+            : "____";
+
+        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
+    }
 }
 
 public sealed class Memory
@@ -71,6 +90,8 @@ public sealed class Memory
     public void Load(byte[] data, ushort address)
     {
         Array.Copy(data, 0, _memory, address, data.Length);
+
+        BytesInMemory = (ushort) data.Length;
     }
 
     public ushort GetOpcode(ushort programCounter)
@@ -79,6 +100,8 @@ public sealed class Memory
     }
 
     public byte[] Raw => _memory;
+
+    public ushort BytesInMemory { get; private set; }
 }
 
 public sealed class Registers
@@ -159,25 +182,30 @@ public sealed class Keyboard { }
 
 public sealed class InstructionSet
 {
-    private readonly Instruction[] _primarySet = new Instruction[16];
+    private readonly Dictionary<byte, List<Instruction>> _set = new();
 
     public void RegisterPrimary(byte index, Instruction instruction)
     {
-        _primarySet[index] = instruction;
+        if (!_set.ContainsKey(index))
+        {
+            _set[index] = new List<Instruction>();
+        }
+
+        _set[index].Add(instruction);
     }
     
     public void Execute(ushort opcode)
     {
         var high = (byte) (opcode >> 12);
-        var handler = _primarySet[high];
-        
-        if (handler.CanExecute(opcode))
+        var instructions = _set[high];
+        var instruction = instructions.FirstOrDefault(i => i.CanExecute(opcode));
+
+        if (instruction is null)
         {
-            handler.Execute(opcode);
-            return;
+            throw new InvalidOperationException($"Unknown opcode: 0x{opcode:X4}");
         }
 
-        throw new InvalidOperationException($"Unknown opcode: 0x{opcode:X4}");
+        instruction.Execute(opcode);
     }
 }
 
@@ -299,5 +327,38 @@ public sealed class InstructionJump : Instruction
         var nnn = (ushort) (opcode & 0x0FFF);
 
         Chip.Registers.Pc = nnn;
+    }
+}
+
+public sealed class InstructionCallAddress : Instruction
+{
+    public InstructionCallAddress(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x2000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var nnn = (ushort) (opcode & 0x0FFF);
+
+        Chip.Registers.Push(Chip.Registers.Pc);
+        Chip.Registers.Pc = nnn;
+    }
+}
+
+public sealed class InstructionReturn : Instruction
+{
+    public InstructionReturn(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return opcode == 0x00EE;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        Chip.Registers.Pc = Chip.Registers.Pop();
     }
 }

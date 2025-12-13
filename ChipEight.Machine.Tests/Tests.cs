@@ -31,6 +31,42 @@ public sealed class Tests
     }
     
     [Fact]
+    public void Chip_Call()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x22, 0x06,
+            0x60, 0x01,
+            0x60, 0x0A,
+            0x00, 0xEE
+        ]);
+        chip.Run(cycles: 4);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x206);
+    }
+    
+    [Fact]
+    public void Chip_CallAndReturn()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x22, 0x06,
+            0x60, 0x01,
+            0x60, 0x02,
+            0x60, 0x0A,
+            0x00, 0xEE
+        ]);
+        
+        chip.Run(cycles: 6);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x208);
+        chip.Registers.Sp.ShouldBe((byte) 0);
+        chip.Opcode.ShouldNotBeNull().ShouldBe((ushort) 0x600A );
+    }
+    
+    [Fact]
     public void Chip_Sprite()
     {
         var chip = new Chip();
