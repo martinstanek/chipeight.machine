@@ -267,6 +267,72 @@ public sealed class Tests
         chip.Registers.V[0].ShouldBe((byte) 0xFF);
         chip.Registers.V[0xF].ShouldBe((byte) 0x0);
     }
+   
+    [Fact]
+    public void Chip_RegistersSubtractReverse_NotBorrow()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x01,
+            0x61, 0x02,
+            0x80, 0x17
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x1);
+        chip.Registers.V[0xF].ShouldBe((byte) 0x1);
+    }
+    
+    [Fact]
+    public void Chip_RegistersSubtractReverse_WithBorrow()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x02,
+            0x61, 0x01,
+            0x80, 0x17
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xFF);
+        chip.Registers.V[0xF].ShouldBe((byte) 0x0);
+    }
+
+    [Fact]
+    public void Chip_RegistersShiftRight()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x02,
+            0x80, 0x16
+        ]);
+        
+        chip.Run(cycles: 2);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x01);
+        chip.Registers.V[0xF].ShouldBe((byte) 0x0);
+    }
+    
+    [Fact]
+    public void Chip_RegistersShiftLeft()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x01,
+            0x80, 0x1E
+        ]);
+        
+        chip.Run(cycles: 2);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x02);
+        chip.Registers.V[0xF].ShouldBe((byte) 0x0);
+    }
     
     [Fact]
     public void Chip_Sprite()
