@@ -18,9 +18,26 @@ public sealed class Tests
     }
     
     [Fact]
+    public void Chip_Sprite()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x62, 0x00, 
+            0x63, 0x00, 
+            0xA2, 0x0A, 
+            0xD2, 0x36, 
+            0x12, 0x08,
+            0x20, 0x70, 
+            0x70, 0xF8, 
+            0xD8, 0x88]);
+        chip.Run(cycles: 8);
+    }
+    
+    [Fact]
     public void Chip_FirstRom()
     {
-        var rom = File.ReadAllBytes("/Users/martinstanek/Documents/dev/git/martinstanek/chipeight.machine/ChipEight.Machine.Tests/Roms/1-chip8-logo.ch8");
+        var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
         var chip = new Chip();
         
         chip.Load(rom);
@@ -30,7 +47,7 @@ public sealed class Tests
     [Fact]
     public void Chip_IbmRom()
     {
-        var rom = File.ReadAllBytes("/Users/martinstanek/Documents/dev/git/martinstanek/chipeight.machine/ChipEight.Machine.Tests/Roms/2-ibm-logo.ch8");
+        var rom = File.ReadAllBytes("./Roms/2-ibm-logo.ch8");
         var chip = new Chip();
         
         chip.Load(rom);

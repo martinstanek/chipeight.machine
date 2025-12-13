@@ -18,6 +18,7 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
         _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
+        _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
     }
 
     public void Load(byte[] program)
@@ -276,11 +277,27 @@ public sealed class InstructionAddImmediateValueToRegister: Instruction
     
     public override void Execute(ushort opcode)
     {
-        
         var reg = (byte) (opcode & 0x0F00) >> 8;
         var valKk = Chip.Registers.V[reg];
         var kk = (byte) (opcode & 0x00FF);
 
         Chip.Registers.V[reg] = (byte) (valKk + kk);
+    }
+}
+
+public sealed class InstructionJump : Instruction
+{
+    public InstructionJump(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0x1000;
+    }
+
+    public override void Execute(ushort opcode)
+    {
+        var nnn = (ushort) (opcode & 0x0FFF);
+
+        Chip.Registers.Pc = nnn;
     }
 }
