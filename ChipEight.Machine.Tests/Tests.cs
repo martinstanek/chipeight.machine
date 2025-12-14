@@ -335,6 +335,95 @@ public sealed class Tests
     }
     
     [Fact]
+    public void Chip_AddRegisterToI()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x01,
+            0xA0, 0x01,
+            0xF0, 0x1E
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0x01);
+        chip.Registers.I.ShouldBe((byte) 0x02);
+    }
+    
+    [Fact]
+    public void Chip_BCD()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0xFE,
+            0xA2, 0x50,
+            0xF0, 0x33
+        ]);
+        
+        chip.Run(cycles: 3);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xFE);
+        chip.Registers.I.ShouldBe((ushort) 0x250);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 2);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 5);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 4);
+    }
+    
+    [Fact]
+    public void Chip_StoreRegistersToMemory()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0xFE,
+            0x61, 0xEF,
+            0x62, 0xFF,
+            0xA2, 0x50,
+            0xF3, 0x55
+        ]);
+        
+        chip.Run(cycles: 5);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xFE);
+        chip.Registers.V[1].ShouldBe((byte) 0xEF);
+        chip.Registers.V[2].ShouldBe((byte) 0xFF);
+        chip.Registers.I.ShouldBe((ushort) 0x250);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
+    }
+    
+    [Fact]
+    public void Chip_LoadRegistersFromMemory()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0xFE,
+            0x61, 0xEF,
+            0x62, 0xFF,
+            0xA2, 0x50,
+            0xF3, 0x55,
+            0x60, 0x00,
+            0x61, 0x00,
+            0x62, 0x00,
+            0xF3, 0x65
+        ]);
+        
+        chip.Run(cycles: 9);
+        
+        chip.Registers.V[0].ShouldBe((byte) 0xFE);
+        chip.Registers.V[1].ShouldBe((byte) 0xEF);
+        chip.Registers.V[2].ShouldBe((byte) 0xFF);
+        chip.Registers.I.ShouldBe((ushort) 0x250);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
+    }
+    
+    [Fact]
     public void Chip_Sprite()
     {
         var chip = new Chip();

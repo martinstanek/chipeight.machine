@@ -7,6 +7,9 @@ namespace ChipEight.Machine;
 
 public sealed class Chip
 {
+    public const ushort FontSetAddress = 0x050;
+    public const ushort StartAddress = 0x200;
+
     private readonly InstructionSet _instructionSet = new();
     private readonly Registers _registers = new();
     private readonly Keyboard _keyboard = new();
@@ -41,11 +44,18 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0xF, new InstructionSetDelayTimer(this));
         _instructionSet.RegisterPrimary(0xF, new InstructionWaitForKeyPress(this));
         _instructionSet.RegisterPrimary(0xF, new InstructionSetSoundTimer(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionAddRegisterToI(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionSetFontSpriteAddress(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionStoreRegistersToMemory(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionLoadRegistersFromMemory(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionBinaryCodedDecimal(this));
+        
+        Memory.Load(Font.FontSet, FontSetAddress);
     }
 
     public void Load(byte[] program)
     {
-        _memory.Load(program, 0x200);
+        _memory.Load(program, StartAddress);
     }
 
     public void Run(ushort cycles)
@@ -98,6 +108,29 @@ public sealed class Chip
 
         return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
     }
+}
+
+public sealed class Font
+{
+    public static readonly byte[] FontSet =
+    [
+        0xF0, 0x90, 0x90, 0x90, 0xF0,
+        0x20, 0x60, 0x20, 0x20, 0x70,
+        0xF0, 0x10, 0xF0, 0x80, 0xF0,
+        0xF0, 0x10, 0xF0, 0x10, 0xF0,
+        0x90, 0x90, 0xF0, 0x10, 0x10,
+        0xF0, 0x80, 0xF0, 0x10, 0xF0,
+        0xF0, 0x80, 0xF0, 0x90, 0xF0,
+        0xF0, 0x10, 0x20, 0x40, 0x40,
+        0xF0, 0x90, 0xF0, 0x90, 0xF0,
+        0xF0, 0x90, 0xF0, 0x10, 0xF0,
+        0xF0, 0x90, 0xF0, 0x90, 0x90,
+        0xE0, 0x90, 0xE0, 0x90, 0xE0,
+        0xF0, 0x80, 0x80, 0x80, 0xF0,
+        0xE0, 0x90, 0x90, 0x90, 0xE0,
+        0xF0, 0x80, 0xF0, 0x80, 0xF0,
+        0xF0, 0x80, 0xF0, 0x80, 0x80
+    ];
 }
 
 public sealed class Memory
@@ -775,5 +808,101 @@ public sealed class InstructionWaitForKeyPress : Instruction
         var reg = (opcode & 0x0F00) >> 8;
 
         Chip.Registers.V[reg] = Chip.Keyboard.WaitForKeyPress(); // TODO: implement
+    }
+}
+
+public sealed class InstructionAddRegisterToI : Instruction
+{
+    public InstructionAddRegisterToI(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x1E;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.I = (byte) (Chip.Registers.I + Chip.Registers.V[reg]);
+    }
+}
+
+public sealed class InstructionSetFontSpriteAddress : Instruction
+{
+    public InstructionSetFontSpriteAddress(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x29;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.I = (ushort) (Chip.FontSetAddress + Chip.Registers.V[reg] * 5);
+    }
+}
+
+public sealed class InstructionStoreRegistersToMemory : Instruction
+{
+    public InstructionStoreRegistersToMemory(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x55;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var x = (opcode & 0x0F00) >> 8;
+
+        for (var i = 0; i < x; i++)
+        {
+            Chip.Memory.Raw[Chip.Registers.I + i] = Chip.Registers.V[i];
+        }
+    }
+}
+
+public sealed class InstructionLoadRegistersFromMemory : Instruction
+{
+    public InstructionLoadRegistersFromMemory(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x65;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var x = (opcode & 0x0F00) >> 8;
+
+        for (var i = 0; i < x; i++)
+        {
+            Chip.Registers.V[i] = Chip.Memory.Raw[Chip.Registers.I + i];
+        }
+    }
+}
+
+public sealed class InstructionBinaryCodedDecimal : Instruction
+{
+    public InstructionBinaryCodedDecimal(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x33;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var x = (opcode & 0x0F00) >> 8;
+        var h = Chip.Registers.V[x] / 100;
+        var t = Chip.Registers.V[x] / 10 % 10;
+        var d = Chip.Registers.V[x] % 10;
+
+        Chip.Memory.Raw[Chip.Registers.I] = (byte) h;
+        Chip.Memory.Raw[Chip.Registers.I + 1] = (byte) t;
+        Chip.Memory.Raw[Chip.Registers.I + 2] = (byte) d;
     }
 }
