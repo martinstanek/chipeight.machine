@@ -15,6 +15,7 @@ public sealed class Chip
     private readonly Display _display = new(new PixelDisplayClient());
     private readonly Keypad _keypad = new();
     private readonly Memory _memory = new();
+    private readonly Random _random = new();
     
     public Chip()
     {
@@ -98,6 +99,8 @@ public sealed class Chip
     public Display Display => _display;
 
     public Keypad Keypad => _keypad;
+
+    public Random Random => _random;
 
     public ushort? Opcode { get; private set; }
 
@@ -849,7 +852,7 @@ public sealed class InstructionAddRegisterToI : Instruction
     {
         var reg = (opcode & 0x0F00) >> 8;
 
-        Chip.Registers.I = (byte) (Chip.Registers.I + Chip.Registers.V[reg]);
+        Chip.Registers.I = (ushort) (Chip.Registers.I + Chip.Registers.V[reg]);
     }
 }
 
@@ -883,7 +886,7 @@ public sealed class InstructionStoreRegistersToMemory : Instruction
     {
         var x = (opcode & 0x0F00) >> 8;
 
-        for (var i = 0; i < x; i++)
+        for (var i = 0; i <= x; i++)
         {
             Chip.Memory.Raw[Chip.Registers.I + i] = Chip.Registers.V[i];
         }
@@ -903,7 +906,7 @@ public sealed class InstructionLoadRegistersFromMemory : Instruction
     {
         var x = (opcode & 0x0F00) >> 8;
 
-        for (var i = 0; i < x; i++)
+        for (var i = 0; i <= x; i++)
         {
             Chip.Registers.V[i] = Chip.Memory.Raw[Chip.Registers.I + i];
         }
@@ -945,7 +948,7 @@ public sealed class InstructionRandomToRegister : Instruction
     {
         var reg = (byte) (opcode & 0x0F00) >> 8;
         var kk = (byte) (opcode & 0x00FF);
-        var r = (byte) new Random().Next(0, 255);
+        var r = (byte) Chip.Random.Next(0, 256);
 
         Chip.Registers.V[reg] = (byte) (r & kk);
     }

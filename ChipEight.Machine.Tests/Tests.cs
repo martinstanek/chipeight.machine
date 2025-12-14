@@ -537,7 +537,7 @@ public sealed class Tests
         var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         
         chip.Load(rom);
-        chip.Run(cycles: 25);
+        chip.Run(cancellation.Token);
     }
     
     [Fact]

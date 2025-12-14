@@ -19,10 +19,10 @@ OK 8XYE vx <<= vy vf = old most significant bit
 OK 9XY0 if vx == vy then
 OK ANNN i := NNN
 OK BNNN jump0 NNN Jump to address NNN + v0
-CXNN vx := random NN Random number 0-255 AND NN
+OK CXNN vx := random NN Random number 0-255 AND NN
 OK DXYN sprite vx vy N vf = 1 on collision
-EX9E if vx -key then Is a key not pressed?
-EXA1 if vx key then Is a key pressed?
+OK EX9E if vx -key then Is a key not pressed?
+OK EXA1 if vx key then Is a key pressed?
 OK FX07 vx := delay
 OK FX0A vx := key Wait for a keypress
 OK FX15 delay := vx
