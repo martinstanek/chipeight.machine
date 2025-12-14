@@ -11,7 +11,7 @@ public sealed class RomTests
     public void Rom_Logo()
     {
         var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
-        var chip = new Chip();
+        var chip = GetCip();
         
         chip.Load(rom);
         chip.Run(cycles: 39);
@@ -21,7 +21,7 @@ public sealed class RomTests
     public void Rom_Logo_Loop()
     {
         var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
-        var chip = new Chip();
+        var chip = GetCip();
         var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         
         chip.Load(rom);
@@ -32,7 +32,7 @@ public sealed class RomTests
     public void Rom_Ibm()
     {
         var rom = File.ReadAllBytes("./Roms/2-ibm-logo.ch8");
-        var chip = new Chip();
+        var chip = GetCip();
         
         chip.Load(rom);
         chip.Run(cycles: 20);
@@ -42,7 +42,7 @@ public sealed class RomTests
     public void Rom_Corax()
     {
         var rom = File.ReadAllBytes("./Roms/3-corax+.ch8");
-        var chip = new Chip();
+        var chip = GetCip();
         var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         
         chip.Load(rom);
@@ -53,10 +53,15 @@ public sealed class RomTests
     public void Rom_Flags()
     {
         var rom = File.ReadAllBytes("./Roms/4-flags.ch8");
-        var chip = new Chip();
+        var chip = GetCip();
         var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         
         chip.Load(rom);
         chip.Run(cancellation.Token);
+    }
+
+    private static Chip GetCip()
+    {
+        return new Chip().WithRemoteDisplay("http://10.0.1.106:8090");
     }
 }

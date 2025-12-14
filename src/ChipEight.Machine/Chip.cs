@@ -421,7 +421,7 @@ public sealed class InstructionAddImmediateValueToRegister: Instruction
     
     public override void Execute(ushort opcode)
     {
-        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var reg = (byte) ((opcode & 0x0F00) >> 8);
         var valKk = Chip.Registers.V[reg];
         var kk = (byte) (opcode & 0x00FF);
 
@@ -490,7 +490,7 @@ public sealed class InstructionSkipIfEqual : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var reg = (byte) ((opcode & 0x0F00) >> 8);
         var regVal = Chip.Registers.V[reg];
         var kk = (byte) (opcode & 0x00FF);
 
@@ -512,7 +512,7 @@ public sealed class InstructionSkipIfNotEqual : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var reg = (byte) ((opcode & 0x0F00) >> 8);
         var regVal = Chip.Registers.V[reg];
         var kk = (byte) (opcode & 0x00FF);
 
@@ -534,8 +534,8 @@ public sealed class InstructionSkipIfRegistersEqual : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var regX = (byte) (opcode & 0x0F00) >> 8;
-        var regY = (byte) (opcode & 0x00F0) >> 4;
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
         var valX = Chip.Registers.V[regX];
         var valY = Chip.Registers.V[regY];
         
@@ -557,8 +557,8 @@ public sealed class InstructionSkipIfRegistersNotEqual : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var regX = (byte) (opcode & 0x0F00) >> 8;
-        var regY = (byte) (opcode & 0x00F0) >> 4;
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
         var valX = Chip.Registers.V[regX];
         var valY = Chip.Registers.V[regY];
         
@@ -580,8 +580,8 @@ public sealed class InstructionRegistersMove : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var regX = (byte) (opcode & 0x0F00) >> 8;
-        var regY = (byte) (opcode & 0x00F0) >> 4;
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var regY = (byte) ((opcode & 0x00F0) >> 4);
         var valY = Chip.Registers.V[regY];
 
         Chip.Registers.V[regX] = valY;
@@ -927,7 +927,7 @@ public sealed class InstructionRandomToRegister : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var reg = (byte) ((opcode & 0x0F00) >> 8);
         var kk = (byte) (opcode & 0x00FF);
         var r = (byte) Chip.Random.Next(0, 256);
 

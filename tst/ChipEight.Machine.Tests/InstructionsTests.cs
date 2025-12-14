@@ -5,6 +5,8 @@ namespace ChipEight.Machine.Tests;
 
 public class InstructionsTests
 {
+    // TODO: all the registers shift from 0 one as default
+    
     [Fact]
     public void Chip_Basic()
     {
@@ -127,15 +129,15 @@ public class InstructionsTests
         var chip = new Chip();
         
         chip.Load([
-            0x60, 0x05,
-            0x30, 0x05,
-            0x60, 0x01,
-            0x60, 0x02
+            0x61, 0x05,
+            0x31, 0x05,
+            0x61, 0x01,
+            0x61, 0x02
         ]);
         
         chip.Run(cycles: 3);
         
-        chip.Registers.V[0].ShouldBe((byte) 0x02);
+        chip.Registers.V[0x1].ShouldBe((byte) 0x02);
     }
     
     [Fact]
@@ -144,15 +146,15 @@ public class InstructionsTests
         var chip = new Chip();
         
         chip.Load([
-            0x60, 0x05,
-            0x40, 0x04,
-            0x60, 0x01,
-            0x60, 0x02
+            0x61, 0x05,
+            0x41, 0x04,
+            0x61, 0x01,
+            0x61, 0x02
         ]);
         
         chip.Run(cycles: 3);
         
-        chip.Registers.V[0].ShouldBe((byte) 0x02);
+        chip.Registers.V[1].ShouldBe((byte) 0x02);
     }
     
     [Fact]
