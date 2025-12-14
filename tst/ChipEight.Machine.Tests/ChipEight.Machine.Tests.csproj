@@ -19,7 +19,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\ChipEight.Machine\ChipEight.Machine.csproj" />
-      <ProjectReference Include="..\ChipEight.Machine\ChipEight.Machine.csproj" />
     </ItemGroup>
 
     <ItemGroup>
