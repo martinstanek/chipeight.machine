@@ -1,8 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine", "ChipEight.Machine\ChipEight.Machine.csproj", "{B1F486D2-909F-435D-AF28-FBAFAB0FD406}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{336BA70A-C240-4037-8843-02E671EDBFF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine.Tests", "ChipEight.Machine.Tests\ChipEight.Machine.Tests.csproj", "{841C8315-4C63-4CAB-BF4A-24AC1686D157}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tst", "tst", "{DE7A0E9A-DEEE-4503-8CCD-0C8D28A8B421}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{2AB62C8C-55EE-49B2-AFBD-C7772BEEA66A}"
+	ProjectSection(SolutionItems) = preProject
+		misc\ibm-test.png = misc\ibm-test.png
+		readme.md = readme.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine", "src\ChipEight.Machine\ChipEight.Machine.csproj", "{91EB7D2C-A04D-454F-96B5-4F95161AA9D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine.Tests", "tst\ChipEight.Machine.Tests\ChipEight.Machine.Tests.csproj", "{9AEBA56C-5C12-4023-A477-DD3876E18156}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,13 +20,17 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B1F486D2-909F-435D-AF28-FBAFAB0FD406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1F486D2-909F-435D-AF28-FBAFAB0FD406}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1F486D2-909F-435D-AF28-FBAFAB0FD406}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1F486D2-909F-435D-AF28-FBAFAB0FD406}.Release|Any CPU.Build.0 = Release|Any CPU
-		{841C8315-4C63-4CAB-BF4A-24AC1686D157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{841C8315-4C63-4CAB-BF4A-24AC1686D157}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{841C8315-4C63-4CAB-BF4A-24AC1686D157}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{841C8315-4C63-4CAB-BF4A-24AC1686D157}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5} = {336BA70A-C240-4037-8843-02E671EDBFF4}
+		{9AEBA56C-5C12-4023-A477-DD3876E18156} = {DE7A0E9A-DEEE-4503-8CCD-0C8D28A8B421}
 	EndGlobalSection
 EndGlobal

@@ -1,3 +1,4 @@
+using ChipEight.Machine.Output;
 using Moq;
 using Shouldly;
 using Xunit;

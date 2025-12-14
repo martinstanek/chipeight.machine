@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using ChipEight.Machine.Output;
 
 namespace ChipEight.Machine;
 
@@ -10,93 +11,97 @@ public sealed class Chip
     public const ushort FontSetAddress = 0x050;
     public const ushort StartAddress = 0x200;
 
-    private readonly InstructionSet _instructionSet = new();
+    private readonly Lazy<InstructionSet> _instructionSet;
+    private readonly Lazy<Display> _display;
+    private readonly Lazy<Memory> _memory;
     private readonly Registers _registers = new();
-    private readonly Display _display = new(new PixelDisplayClient());
     private readonly Keypad _keypad = new();
-    private readonly Memory _memory = new();
     private readonly Random _random = new();
+    private IRemoteDisplay? _remoteDisplay;
     
     public Chip()
     {
-        // TODO: clean this up, can be way less chatty
-        _instructionSet.RegisterPrimary(0x0, new InstructionClear(this));
-        _instructionSet.RegisterPrimary(0x0, new InstructionReturn(this));
-        _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
-        _instructionSet.RegisterPrimary(0x2, new InstructionCallAddress(this));
-        _instructionSet.RegisterPrimary(0x3, new InstructionSkipIfEqual(this));
-        _instructionSet.RegisterPrimary(0x4, new InstructionSkipIfNotEqual(this));
-        _instructionSet.RegisterPrimary(0x5, new InstructionSkipIfRegistersEqual(this));
-        _instructionSet.RegisterPrimary(0x6, new InstructionLoadVxImmediate(this));
-        _instructionSet.RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersMove(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersOr(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersAnd(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersXor(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersAdd(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersSubtract(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersSubtractReverse(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersShiftRight(this));
-        _instructionSet.RegisterPrimary(0x8, new InstructionRegistersShiftLeft(this));
-        _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
-        _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
-        _instructionSet.RegisterPrimary(0xB, new InstructionJumpToAddress(this));
-        _instructionSet.RegisterPrimary(0xC, new InstructionRandomToRegister(this));
-        _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
-        _instructionSet.RegisterPrimary(0xE, new InstructionSkipIfKey(this));
-        _instructionSet.RegisterPrimary(0xE, new InstructionSkipIfNotKey(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionGetDelayTimer(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionSetDelayTimer(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionWaitForKeyPress(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionSetSoundTimer(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionAddRegisterToI(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionSetFontSpriteAddress(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionStoreRegistersToMemory(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionLoadRegistersFromMemory(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionBinaryCodedDecimal(this));
-        
-        Memory.Load(Font.FontSet, FontSetAddress);
+        _instructionSet = new Lazy<InstructionSet>(() => GetInstructionSet(this));
+        _display = new Lazy<Display>(GetDisplay);
+        _memory = new Lazy<Memory>(GetMemory);
     }
-
-    public void Load(byte[] program)
+    
+    public Chip Load(byte[] program)
     {
-        _memory.Load(program, StartAddress);
+        _memory.Value.Load(program, StartAddress);
+
+        return this;
     }
 
-    public void Run(ushort cycles)
+    public Chip Run(ushort cycles)
     {   
         for (var c = 0; c < cycles; c++)
         {
             Step();
         }
+
+        return this;
     }
     
-    public void Run(CancellationToken cancellationToken)
+    public Chip Run(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {   
             Step();
         }
+
+        return this;
+    }
+
+    public Chip Run()
+    {
+        return Run(CancellationToken.None);
+    }
+
+    public Chip WithRemoteDisplay(string url)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+        
+        _remoteDisplay = new PixelDisplayClient(url);
+
+        return this;
     }
 
     public void Step()
     {
-        Opcode = _memory.GetOpcode(_registers.Pc);
+        Opcode = _memory.Value.GetOpcode(_registers.Pc);
 
         _registers.Pc += 2;
 
-        _instructionSet.Execute(Opcode.Value);
+        _instructionSet.Value.Execute(Opcode.Value);
     }
 
     public void Stop()
     {
     }
 
-    public Memory Memory => _memory;
+    private static InstructionSet GetInstructionSet(Chip chip)
+    {
+        return new InstructionSet().Build(chip);
+    }
+
+    private Display GetDisplay()
+    {
+        return _remoteDisplay is not null
+            ? new Display(_remoteDisplay)
+            : new Display();
+    }
+
+    private static Memory GetMemory()
+    {
+        return new Memory().Init();
+    }
+
+    public Memory Memory => _memory.Value;
 
     public Registers Registers => _registers;
 
-    public Display Display => _display;
+    public Display Display => _display.Value;
 
     public Keypad Keypad => _keypad;
 
@@ -149,6 +154,13 @@ public sealed class Memory
         Array.Copy(data, 0, _memory, address, data.Length);
 
         BytesInMemory = (ushort) data.Length;
+    }
+
+    public Memory Init()
+    {
+        Load(Font.FontSet, Chip.FontSetAddress);
+
+        return this;
     }
 
     public ushort GetOpcode(ushort programCounter)
@@ -208,77 +220,6 @@ public sealed class Registers
     public byte[] V => _general;
 }
 
-public interface IRemoteDisplay
-{
-    void Clear();
-
-    void DrawSprite(byte x, byte y, byte[] sprite);
-}
-
-public sealed class Display
-{
-    public const byte Width = 64;
-    public const byte Height = 32;
-
-    private readonly bool[,] _pixels = new bool[Width, Height];
-    private readonly IRemoteDisplay _remoteDisplay;
-
-    public Display(IRemoteDisplay remoteDisplay)
-    {
-        _remoteDisplay = remoteDisplay;
-    }
-
-    public void Clear()
-    {
-        Array.Clear(_pixels);
-        _remoteDisplay.Clear();
-    }
-
-    public bool DrawSprite(byte x, byte y, byte[] sprite)
-    {
-        var collisionDetected = DrawSpriteInternal(x, y, sprite);
-        
-        _remoteDisplay.DrawSprite(x, y, sprite);
-
-        return collisionDetected;
-    }
-    
-    public bool GetPixel(byte x, byte y)
-    {
-        return _pixels[x, y];
-    }
-
-    private bool DrawSpriteInternal(byte x, byte y, byte[] sprite)
-    {
-        var collision = false;
-
-        for (var row = 0; row < sprite.Length; row++)
-        {
-            var spriteByte = sprite[row];
-
-            for (var bit = 0; bit < 8; bit++)
-            {
-                if ((spriteByte & (0x80 >> bit)) == 0)
-                {
-                    continue;
-                }
-
-                var px = (x + bit) % Width;
-                var py = (y + row) % Height;
-
-                if (_pixels[px, py])
-                {
-                    collision = true;
-                }
-
-                _pixels[px, py] ^= true;
-            }
-        }
-
-        return collision;
-    }
-}
-
 public sealed class Keypad
 {
     private readonly bool[] _keys = new bool[16];
@@ -294,6 +235,46 @@ public sealed class Keypad
 public sealed class InstructionSet
 {
     private readonly Dictionary<byte, List<Instruction>> _set = new();
+
+    public InstructionSet Build(Chip chip)
+    {
+        RegisterPrimary(0x0, new InstructionClear(chip));
+        RegisterPrimary(0x0, new InstructionReturn(chip));
+        RegisterPrimary(0x1, new InstructionJump(chip));
+        RegisterPrimary(0x2, new InstructionCallAddress(chip));
+        RegisterPrimary(0x3, new InstructionSkipIfEqual(chip));
+        RegisterPrimary(0x4, new InstructionSkipIfNotEqual(chip));
+        RegisterPrimary(0x5, new InstructionSkipIfRegistersEqual(chip));
+        RegisterPrimary(0x6, new InstructionLoadVxImmediate(chip));
+        RegisterPrimary(0x7, new InstructionAddImmediateValueToRegister(chip));
+        RegisterPrimary(0x8, new InstructionRegistersMove(chip));
+        RegisterPrimary(0x8, new InstructionRegistersOr(chip));
+        RegisterPrimary(0x8, new InstructionRegistersAnd(chip));
+        RegisterPrimary(0x8, new InstructionRegistersXor(chip));
+        RegisterPrimary(0x8, new InstructionRegistersAdd(chip));
+        RegisterPrimary(0x8, new InstructionRegistersSubtract(chip));
+        RegisterPrimary(0x8, new InstructionRegistersSubtractReverse(chip));
+        RegisterPrimary(0x8, new InstructionRegistersShiftRight(chip));
+        RegisterPrimary(0x8, new InstructionRegistersShiftLeft(chip));
+        RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(chip));
+        RegisterPrimary(0xA, new InstructionAddressToI(chip));
+        RegisterPrimary(0xB, new InstructionJumpToAddress(chip));
+        RegisterPrimary(0xC, new InstructionRandomToRegister(chip));
+        RegisterPrimary(0xD, new InstructionDrawSprite(chip));
+        RegisterPrimary(0xE, new InstructionSkipIfKey(chip));
+        RegisterPrimary(0xE, new InstructionSkipIfNotKey(chip));
+        RegisterPrimary(0xF, new InstructionGetDelayTimer(chip));
+        RegisterPrimary(0xF, new InstructionSetDelayTimer(chip));
+        RegisterPrimary(0xF, new InstructionWaitForKeyPress(chip));
+        RegisterPrimary(0xF, new InstructionSetSoundTimer(chip));
+        RegisterPrimary(0xF, new InstructionAddRegisterToI(chip));
+        RegisterPrimary(0xF, new InstructionSetFontSpriteAddress(chip));
+        RegisterPrimary(0xF, new InstructionStoreRegistersToMemory(chip));
+        RegisterPrimary(0xF, new InstructionLoadRegistersFromMemory(chip));
+        RegisterPrimary(0xF, new InstructionBinaryCodedDecimal(chip));
+
+        return this;
+    }
 
     public void RegisterPrimary(byte index, Instruction instruction)
     {

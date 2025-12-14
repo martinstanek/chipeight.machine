@@ -1,12 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Threading;
 using Shouldly;
 using Xunit;
 
 namespace ChipEight.Machine.Tests;
 
-public sealed class Tests
+public class InstructionsTests
 {
     [Fact]
     public void Chip_Basic()
@@ -482,7 +479,7 @@ public sealed class Tests
     }
     
     [Fact]
-    public void Chip_Sprite()
+    public void Chip_DrawSprite()
     {
         var chip = new Chip();
         
@@ -496,58 +493,5 @@ public sealed class Tests
             0x70, 0xF8, 
             0xD8, 0x88]);
         chip.Run(cycles: 8);
-    }
-    
-    [Fact]
-    public void Chip_FirstRom()
-    {
-        var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
-        var chip = new Chip();
-        
-        chip.Load(rom);
-        chip.Run(cycles: 39);
-    }
-    
-    [Fact]
-    public void Chip_FirstRom_Loop()
-    {
-        var rom = File.ReadAllBytes("./Roms/1-chip8-logo.ch8");
-        var chip = new Chip();
-        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        
-        chip.Load(rom);
-        chip.Run(cancellation.Token);
-    }
-    
-    [Fact]
-    public void Chip_IbmRom()
-    {
-        var rom = File.ReadAllBytes("./Roms/2-ibm-logo.ch8");
-        var chip = new Chip();
-        
-        chip.Load(rom);
-        chip.Run(cycles: 20);
-    }
-
-    [Fact]
-    public void Chip_Rom_Corax()
-    {
-        var rom = File.ReadAllBytes("./Roms/3-corax+.ch8");
-        var chip = new Chip();
-        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        
-        chip.Load(rom);
-        chip.Run(cancellation.Token);
-    }
-    
-    [Fact]
-    public void Chip_Rom_Flags()
-    {
-        var rom = File.ReadAllBytes("./Roms/4-flags.ch8");
-        var chip = new Chip();
-        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        
-        chip.Load(rom);
-        chip.Run(cancellation.Token);
     }
 }

@@ -1,19 +1,25 @@
 using System;
 using System.Net.Http;
+using ChipEight.Machine.Output;
 
 namespace ChipEight.Machine;
 
 public sealed class PixelDisplayClient : IRemoteDisplay
 {
-    private const string RemoteDisplayUrl = "http://10.0.1.110:8090";
-    
-    private readonly Lazy<HttpClient> _httpClient = new(GetClient);
+    private readonly Lazy<HttpClient> _httpClient;
 
-    private static HttpClient GetClient()
+    public PixelDisplayClient(string remoteUrl)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteUrl);
+
+        _httpClient = new Lazy<HttpClient>(() => GetClient(remoteUrl));
+    }
+
+    private static HttpClient GetClient(string remoteUrl)
     {
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri(RemoteDisplayUrl)
+            BaseAddress = new Uri(remoteUrl)
         };
 
         return httpClient;
