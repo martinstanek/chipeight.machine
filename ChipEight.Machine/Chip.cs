@@ -12,13 +12,13 @@ public sealed class Chip
 
     private readonly InstructionSet _instructionSet = new();
     private readonly Registers _registers = new();
-    private readonly Keyboard _keyboard = new();
     private readonly Display _display = new(new PixelDisplayClient());
+    private readonly Keypad _keypad = new();
     private readonly Memory _memory = new();
     
     public Chip()
     {
-        // TODO: clean this up, ca be way less chatty
+        // TODO: clean this up, can be way less chatty
         _instructionSet.RegisterPrimary(0x0, new InstructionClear(this));
         _instructionSet.RegisterPrimary(0x0, new InstructionReturn(this));
         _instructionSet.RegisterPrimary(0x1, new InstructionJump(this));
@@ -39,7 +39,11 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x8, new InstructionRegistersShiftLeft(this));
         _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
+        _instructionSet.RegisterPrimary(0xB, new InstructionJumpToAddress(this));
+        _instructionSet.RegisterPrimary(0xC, new InstructionRandomToRegister(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
+        _instructionSet.RegisterPrimary(0xE, new InstructionSkipIfKey(this));
+        _instructionSet.RegisterPrimary(0xE, new InstructionSkipIfNotKey(this));
         _instructionSet.RegisterPrimary(0xF, new InstructionGetDelayTimer(this));
         _instructionSet.RegisterPrimary(0xF, new InstructionSetDelayTimer(this));
         _instructionSet.RegisterPrimary(0xF, new InstructionWaitForKeyPress(this));
@@ -93,7 +97,7 @@ public sealed class Chip
 
     public Display Display => _display;
 
-    public Keyboard Keyboard => _keyboard;
+    public Keypad Keypad => _keypad;
 
     public ushort? Opcode { get; private set; }
 
@@ -272,12 +276,16 @@ public sealed class Display
     }
 }
 
-public sealed class Keyboard
+public sealed class Keypad
 {
+    private readonly bool[] _keys = new bool[16];
+    
     public byte WaitForKeyPress()
     {
         return 0x00;
     }
+
+    public bool[] Keys => _keys;
 }
 
 public sealed class InstructionSet
@@ -369,6 +377,23 @@ public sealed class InstructionAddressToI : Instruction
         var nnn = (ushort) (opcode & 0x0FFF);
 
         Chip.Registers.I = nnn;
+    }
+}
+
+public sealed class InstructionJumpToAddress : Instruction
+{
+    public InstructionJumpToAddress(Chip chip) : base(chip) { }
+    
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xB000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var nnn = (ushort) (opcode & 0x0FFF);
+        
+        Chip.Registers.Pc = (ushort) (nnn + Chip.Registers.V[0x0]);
     }
 }
 
@@ -807,7 +832,7 @@ public sealed class InstructionWaitForKeyPress : Instruction
     {
         var reg = (opcode & 0x0F00) >> 8;
 
-        Chip.Registers.V[reg] = Chip.Keyboard.WaitForKeyPress(); // TODO: implement
+        Chip.Registers.V[reg] = Chip.Keypad.WaitForKeyPress(); // TODO: implement
     }
 }
 
@@ -904,5 +929,66 @@ public sealed class InstructionBinaryCodedDecimal : Instruction
         Chip.Memory.Raw[Chip.Registers.I] = (byte) h;
         Chip.Memory.Raw[Chip.Registers.I + 1] = (byte) t;
         Chip.Memory.Raw[Chip.Registers.I + 2] = (byte) d;
+    }
+}
+
+public sealed class InstructionRandomToRegister : Instruction
+{
+    public InstructionRandomToRegister(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xC000;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (byte) (opcode & 0x0F00) >> 8;
+        var kk = (byte) (opcode & 0x00FF);
+        var r = (byte) new Random().Next(0, 255);
+
+        Chip.Registers.V[reg] = (byte) (r & kk);
+    }
+}
+
+public sealed class InstructionSkipIfKey : Instruction
+{
+    public InstructionSkipIfKey(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xE000 && (((opcode & 0x00F0) >> 4) == 0x9) && (opcode & 0x000F) == 0xE;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var valX = Chip.Registers.V[regX];
+
+        if (Chip.Keypad.Keys[valX])
+        {
+            Chip.Registers.Pc += 2;
+        }
+    }
+}
+
+public sealed class InstructionSkipIfNotKey : Instruction
+{
+    public InstructionSkipIfNotKey(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xE000 && (((opcode & 0x00F0) >> 4) == 0xA) && (opcode & 0x000F) == 0x1;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var regX = (byte) ((opcode & 0x0F00) >> 8);
+        var valX = Chip.Registers.V[regX];
+
+        if (!Chip.Keypad.Keys[valX])
+        {
+            Chip.Registers.Pc += 2;
+        }
     }
 }

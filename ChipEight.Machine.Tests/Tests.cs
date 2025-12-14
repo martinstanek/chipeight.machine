@@ -31,6 +31,34 @@ public sealed class Tests
     }
     
     [Fact]
+    public void Chip_JumpToAddress()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x10,
+            0xB2, 0x00
+        ]);
+        chip.Run(cycles: 2);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x210);
+    }
+    
+    [Fact]
+    public void Chip_RandomToRegister()
+    {
+        var chip = new Chip();
+        
+        chip.Load([
+            0x60, 0x81,
+            0xC0, 0x01
+        ]);
+        chip.Run(cycles: 2);
+        
+        chip.Registers.V[0x0].ShouldNotBe((byte) 0x81);
+    }
+    
+    [Fact]
     public void Chip_Call()
     {
         var chip = new Chip();
@@ -42,6 +70,36 @@ public sealed class Tests
             0x00, 0xEE
         ]);
         chip.Run(cycles: 4);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x206);
+    }
+    
+    [Fact]
+    public void Chip_SkipIfKey()
+    {
+        var chip = new Chip();
+        
+        chip.Keypad.Keys[0x2] = true;
+        chip.Load([
+            0x61, 0x02,
+            0xE1, 0x9E
+        ]);
+        chip.Run(cycles: 2);
+        
+        chip.Registers.Pc.ShouldBe((ushort) 0x206);
+    }
+    
+    [Fact]
+    public void Chip_SkipIfNotKey()
+    {
+        var chip = new Chip();
+        
+        chip.Keypad.Keys[0x2] = false;
+        chip.Load([
+            0x61, 0x02,
+            0xE1, 0xA1
+        ]);
+        chip.Run(cycles: 2);
         
         chip.Registers.Pc.ShouldBe((ushort) 0x206);
     }

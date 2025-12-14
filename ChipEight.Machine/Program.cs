@@ -11,11 +11,8 @@ public static class Program
         var chip = new Chip();
         
         chip.Load([
-            0x22, 0x06,
-            0x60, 0x01,
-            0x60, 0x02,
-            0x60, 0x0A,
-            0x00, 0xEE
+            0x60, 0x10,
+            0xB2, 0x00
         ]);
 
         Console.WriteLine(chip.ShowState());
