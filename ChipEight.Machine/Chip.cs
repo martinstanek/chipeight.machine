@@ -37,7 +37,10 @@ public sealed class Chip
         _instructionSet.RegisterPrimary(0x9, new InstructionSkipIfRegistersNotEqual(this));
         _instructionSet.RegisterPrimary(0xA, new InstructionAddressToI(this));
         _instructionSet.RegisterPrimary(0xD, new InstructionDrawSprite(this));
-        _instructionSet.RegisterPrimary(0xF, new InstructionF(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionGetDelayTimer(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionSetDelayTimer(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionWaitForKeyPress(this));
+        _instructionSet.RegisterPrimary(0xF, new InstructionSetSoundTimer(this));
     }
 
     public void Load(byte[] program)
@@ -236,7 +239,13 @@ public sealed class Display
     }
 }
 
-public sealed class Keyboard { }
+public sealed class Keyboard
+{
+    public byte WaitForKeyPress()
+    {
+        return 0x00;
+    }
+}
 
 public sealed class InstructionSet
 {
@@ -701,16 +710,70 @@ public sealed class InstructionRegistersShiftLeft : Instruction
     }
 }
 
-public sealed class InstructionF : Instruction
+public sealed class InstructionGetDelayTimer : Instruction
 {
-    public InstructionF(Chip chip) : base(chip) { }
+    public InstructionGetDelayTimer(Chip chip) : base(chip) { }
 
     public override bool CanExecute(ushort opcode)
     {
-        return (opcode & 0xF000) == 0xF000;
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x07;
     }
     
     public override void Execute(ushort opcode)
     {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.V[reg] = Chip.Registers.Dt; // TODO: implement
+    }
+}
+
+public sealed class InstructionSetDelayTimer : Instruction
+{
+    public InstructionSetDelayTimer(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x15;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.Dt = Chip.Registers.V[reg]; // TODO: implement
+    }
+}
+
+public sealed class InstructionSetSoundTimer : Instruction
+{
+    public InstructionSetSoundTimer(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x18;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.St = Chip.Registers.V[reg]; // TODO: implement
+    }
+}
+
+public sealed class InstructionWaitForKeyPress : Instruction
+{
+    public InstructionWaitForKeyPress(Chip chip) : base(chip) { }
+
+    public override bool CanExecute(ushort opcode)
+    {
+        return (opcode & 0xF000) == 0xF000 && ( opcode & 0x00FF) == 0x0A;
+    }
+    
+    public override void Execute(ushort opcode)
+    {
+        var reg = (opcode & 0x0F00) >> 8;
+
+        Chip.Registers.V[reg] = Chip.Keyboard.WaitForKeyPress(); // TODO: implement
     }
 }
