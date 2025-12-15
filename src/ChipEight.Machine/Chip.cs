@@ -18,6 +18,7 @@ public sealed class Chip
     private readonly Keypad _keypad = new();
     private readonly Random _random = new();
     private IRemoteDisplay? _remoteDisplay;
+    private bool _shallRun = true;
     
     public Chip()
     {
@@ -34,7 +35,9 @@ public sealed class Chip
     }
 
     public Chip Run(ushort cycles)
-    {   
+    {
+        _shallRun = true;
+        
         for (var c = 0; c < cycles; c++)
         {
             Step();
@@ -45,7 +48,9 @@ public sealed class Chip
     
     public Chip Run(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        _shallRun = true;
+        
+        while (_shallRun && !cancellationToken.IsCancellationRequested)
         {   
             Step();
         }
@@ -78,6 +83,7 @@ public sealed class Chip
 
     public void Stop()
     {
+        _shallRun = false;
     }
 
     private static InstructionSet GetInstructionSet(Chip chip)

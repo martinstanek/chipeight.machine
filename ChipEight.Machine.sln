@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine", "src\Ch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Machine.Tests", "tst\ChipEight.Machine.Tests\ChipEight.Machine.Tests.csproj", "{9AEBA56C-5C12-4023-A477-DD3876E18156}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipEight.Host", "src\ChipEight.Host\ChipEight.Host.csproj", "{5C3DA022-DB44-445D-A57F-6BA329CE0F84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,9 +32,14 @@ Global
 		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9AEBA56C-5C12-4023-A477-DD3876E18156}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C3DA022-DB44-445D-A57F-6BA329CE0F84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C3DA022-DB44-445D-A57F-6BA329CE0F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C3DA022-DB44-445D-A57F-6BA329CE0F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C3DA022-DB44-445D-A57F-6BA329CE0F84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{91EB7D2C-A04D-454F-96B5-4F95161AA9D5} = {336BA70A-C240-4037-8843-02E671EDBFF4}
 		{9AEBA56C-5C12-4023-A477-DD3876E18156} = {DE7A0E9A-DEEE-4503-8CCD-0C8D28A8B421}
+		{5C3DA022-DB44-445D-A57F-6BA329CE0F84} = {336BA70A-C240-4037-8843-02E671EDBFF4}
 	EndGlobalSection
 EndGlobal
