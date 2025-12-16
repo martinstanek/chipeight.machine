@@ -18,7 +18,7 @@ public sealed class InstructionDrawSprite : Instruction
         var n = opcode & 0x000F;
         var x = Chip.Registers.V[xReg];
         var y = Chip.Registers.V[yReg];
-        var sprite = new Span<byte>(Chip.Memory.Raw, Chip.Registers.I, n);
+        var sprite = new Span<byte>(Chip.ReadWriteMemory.Raw, Chip.Registers.I, n);
 
         Chip.Registers.V[0xF] = 0x0;
         

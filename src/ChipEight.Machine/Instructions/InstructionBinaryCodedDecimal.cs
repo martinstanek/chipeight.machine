@@ -16,8 +16,8 @@ public sealed class InstructionBinaryCodedDecimal : Instruction
         var t = Chip.Registers.V[x] / 10 % 10;
         var d = Chip.Registers.V[x] % 10;
 
-        Chip.Memory.Raw[Chip.Registers.I] = (byte) h;
-        Chip.Memory.Raw[Chip.Registers.I + 1] = (byte) t;
-        Chip.Memory.Raw[Chip.Registers.I + 2] = (byte) d;
+        Chip.ReadWriteMemory.Raw[Chip.Registers.I] = (byte) h;
+        Chip.ReadWriteMemory.Raw[Chip.Registers.I + 1] = (byte) t;
+        Chip.ReadWriteMemory.Raw[Chip.Registers.I + 2] = (byte) d;
     }
 }

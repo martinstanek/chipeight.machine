@@ -15,7 +15,7 @@ public sealed class InstructionStoreRegistersToMemory : Instruction
 
         for (var i = 0; i <= x; i++)
         {
-            Chip.Memory.Raw[Chip.Registers.I + i] = Chip.Registers.V[i];
+            Chip.ReadWriteMemory.Raw[Chip.Registers.I + i] = Chip.Registers.V[i];
         }
     }
 }

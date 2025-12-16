@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using ChipEight.Machine.Input;
 using ChipEight.Machine.Instructions;
+using ChipEight.Machine.Memory;
 using ChipEight.Machine.Output;
 
 namespace ChipEight.Machine;
@@ -13,8 +14,8 @@ public sealed class Chip
     public const ushort StartAddress = 0x200;
 
     private readonly Lazy<InstructionSet> _instructionSet;
+    private readonly Lazy<ReadWriteMemory> _memory;
     private readonly Lazy<Display> _display;
-    private readonly Lazy<Memory> _memory;
     private readonly Lazy<Keypad> _keypad;
     private readonly Registers _registers = new();
     private readonly Random _random = new();
@@ -26,7 +27,7 @@ public sealed class Chip
     {
         _instructionSet = new Lazy<InstructionSet>(() => GetInstructionSet(this));
         _display = new Lazy<Display>(GetDisplay);
-        _memory = new Lazy<Memory>(GetMemory);
+        _memory = new Lazy<Memory.ReadWriteMemory>(GetMemory);
         _keypad = new Lazy<Keypad>(GetKeypad);
     }
     
@@ -115,12 +116,12 @@ public sealed class Chip
             : new Keypad();
     }
 
-    private static Memory GetMemory()
+    private static Memory.ReadWriteMemory GetMemory()
     {
-        return new Memory().Init();
+        return new Memory.ReadWriteMemory().Init();
     }
 
-    public Memory Memory => _memory.Value;
+    public Memory.ReadWriteMemory ReadWriteMemory => _memory.Value;
 
     public Registers Registers => _registers;
 
@@ -132,7 +133,7 @@ public sealed class Chip
 
     public ushort? Opcode { get; private set; }
 
-    public string ShowState()
+    public override string ToString()
     {
         var programCounterHex = Convert.ToHexString(BitConverter.GetBytes(Registers.Pc).Reverse().ToArray());
         var stackPointerHex = Convert.ToHexString([Registers.Sp]);
@@ -141,104 +142,6 @@ public sealed class Chip
             ? Convert.ToHexString(BitConverter.GetBytes(Opcode.Value).Reverse().ToArray())
             : "____";
 
-        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
+        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {ReadWriteMemory.BytesInMemory}B";
     }
-}
-
-public sealed class Font
-{
-    public static readonly byte[] FontSet =
-    [
-        0xF0, 0x90, 0x90, 0x90, 0xF0,
-        0x20, 0x60, 0x20, 0x20, 0x70,
-        0xF0, 0x10, 0xF0, 0x80, 0xF0,
-        0xF0, 0x10, 0xF0, 0x10, 0xF0,
-        0x90, 0x90, 0xF0, 0x10, 0x10,
-        0xF0, 0x80, 0xF0, 0x10, 0xF0,
-        0xF0, 0x80, 0xF0, 0x90, 0xF0,
-        0xF0, 0x10, 0x20, 0x40, 0x40,
-        0xF0, 0x90, 0xF0, 0x90, 0xF0,
-        0xF0, 0x90, 0xF0, 0x10, 0xF0,
-        0xF0, 0x90, 0xF0, 0x90, 0x90,
-        0xE0, 0x90, 0xE0, 0x90, 0xE0,
-        0xF0, 0x80, 0x80, 0x80, 0xF0,
-        0xE0, 0x90, 0x90, 0x90, 0xE0,
-        0xF0, 0x80, 0xF0, 0x80, 0xF0,
-        0xF0, 0x80, 0xF0, 0x80, 0x80
-    ];
-}
-
-public sealed class Memory
-{
-    private readonly byte[] _memory = new byte[4096];
-
-    public void Load(byte[] data, ushort address)
-    {
-        Array.Copy(data, 0, _memory, address, data.Length);
-
-        BytesInMemory = (ushort) data.Length;
-    }
-
-    public Memory Init()
-    {
-        Load(Font.FontSet, Chip.FontSetAddress);
-
-        return this;
-    }
-
-    public ushort GetOpcode(ushort programCounter)
-    {
-        return (ushort) ( (_memory[programCounter] << 8) | _memory[programCounter + 1] );
-    }
-
-    public byte[] Raw => _memory;
-
-    public ushort BytesInMemory { get; private set; }
-}
-
-public sealed class Registers
-{
-    private readonly ushort[] _stack = new ushort[16];
-    private readonly byte[] _general = new byte[16];
-    private ushort _pc = 0x200;
-    private ushort _i = 0;
-    private byte _sp = 0;
-    private byte _dt = 0;
-    private byte _st = 0;
-
-    public void Push(ushort value) => _stack[_sp++] = value;
-    
-    public ushort Pop() => _stack[--_sp];
-    
-    public ushort I
-    {
-        get => _i;
-        set { _i = value; }
-    }
-
-    public ushort Pc
-    {
-        get => _pc;
-        set { _pc = value; }
-    }
-    
-    public byte Sp
-    {
-        get => _sp;
-        set { _sp = value; }
-    }
-    
-    public byte Dt
-    {
-        get => _dt;
-        set { _dt = value; }
-    }
-    
-    public byte St
-    {
-        get => _st;
-        set { _st = value; }
-    }
-
-    public byte[] V => _general;
 }
