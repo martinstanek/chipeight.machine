@@ -1,9 +1,10 @@
+using System;
+
 namespace ChipEight.Machine.Input;
 
 public sealed class Keypad
 {
     private readonly IRemoteKeyPad _remoteKeyPad;
-    private readonly bool[] _keys = new bool[16];
     
     public Keypad()
     {
@@ -17,13 +18,24 @@ public sealed class Keypad
 
     public bool IsLastKeyPressed()
     {
-        return false;
+        var lastKeyPressed = _remoteKeyPad.GetLastKeyPressed();
+
+        return lastKeyPressed.HasValue;
     }
 
     public byte GetLastKeyPressed()
     {
-        return 0x00;
+        var lastKeyPressed = _remoteKeyPad.GetLastKeyPressed();
+
+        if (!lastKeyPressed.HasValue)
+        {
+            throw new InvalidOperationException("Do not read without prior check");
+        }
+
+        _remoteKeyPad.AckLastKeyPressed();
+
+        return lastKeyPressed.Value;
     }
 
-    public bool[] Keys => _keys;
+    public bool[] Keys => _remoteKeyPad.GetKeys();
 }
