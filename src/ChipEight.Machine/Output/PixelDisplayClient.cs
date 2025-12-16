@@ -1,8 +1,7 @@
 using System;
 using System.Net.Http;
-using ChipEight.Machine.Output;
 
-namespace ChipEight.Machine;
+namespace ChipEight.Machine.Output;
 
 public sealed class PixelDisplayClient : IRemoteDisplay
 {
