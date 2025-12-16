@@ -13,6 +13,6 @@ The first argument is the path to your ROM of choice the second one is the URL p
 The remote HMI is optional and if not provided, the VM will run with limited terminal display\
 emulation and without any keyboard input.
 
-![logo](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/ibm-test.png?raw=true)
-![logo](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/corax-test.png?raw=true)
-![logo](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/flags-test.png?raw=true)
+![terminal](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/ibm-test.png?raw=true)
+![terminal](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/corax-test.png?raw=true)
+![terminal](https://github.com/martinstanek/chipeight.machine/blob/develop/misc/flags-test.png?raw=true)
