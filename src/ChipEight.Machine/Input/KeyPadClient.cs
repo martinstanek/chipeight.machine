@@ -15,21 +15,6 @@ public sealed class KeyPadClient : IRemoteKeyPad
         _httpClient = new Lazy<HttpClient>(GetHttpClient(url));
     }
     
-    public bool[] GetKeys()
-    {
-        var keys = _httpClient.Value.GetStringAsync("/keys").Result;
-
-        if (string.IsNullOrWhiteSpace(keys))
-        {
-            throw new InvalidOperationException("Unexpected response");
-        }
-
-        var onlyPadKeys = keys.Substring(2, 16);
-        var result = onlyPadKeys.Select(s => s == '1').ToArray();
-
-        return result;
-    }
-
     public byte? GetLastKeyPressed()
     {
         var keys = _httpClient.Value.GetStringAsync("/keys").Result;
@@ -61,4 +46,21 @@ public sealed class KeyPadClient : IRemoteKeyPad
 
         return client;
     }
+    
+    private bool[] GetKeys()
+    {
+        var keys = _httpClient.Value.GetStringAsync("/keys").Result;
+
+        if (string.IsNullOrWhiteSpace(keys))
+        {
+            throw new InvalidOperationException("Unexpected response");
+        }
+
+        var onlyPadKeys = keys.Substring(2, 16);
+        var result = onlyPadKeys.Select(s => s == '1').ToArray();
+
+        return result;
+    }
+
+    public bool[] Keys => GetKeys();
 }

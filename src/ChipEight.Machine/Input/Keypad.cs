@@ -37,5 +37,5 @@ public sealed class Keypad
         return lastKeyPressed.Value;
     }
 
-    public bool[] Keys => _remoteKeyPad.GetKeys();
+    public bool[] Keys => _remoteKeyPad.Keys;
 }

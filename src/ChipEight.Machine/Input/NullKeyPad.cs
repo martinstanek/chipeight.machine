@@ -4,15 +4,14 @@ namespace ChipEight.Machine.Input;
 
 public sealed class NullKeyPad : IRemoteKeyPad
 {
-    public bool[] GetKeys()
-    {
-        return Enumerable.Repeat(false, 16).ToArray();
-    }
-
+    private readonly bool[] _keys = new bool[16];
+    
     public byte? GetLastKeyPressed()
     {
         return null;
     }
 
     public void AckLastKeyPressed() { }
+
+    public bool[] Keys => _keys;
 }
