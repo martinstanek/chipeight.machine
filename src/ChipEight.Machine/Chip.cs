@@ -26,8 +26,8 @@ public sealed class Chip
     public Chip()
     {
         _instructionSet = new Lazy<InstructionSet>(() => GetInstructionSet(this));
+        _memory = new Lazy<ReadWriteMemory>(GetMemory);
         _display = new Lazy<Display>(GetDisplay);
-        _memory = new Lazy<Memory.ReadWriteMemory>(GetMemory);
         _keypad = new Lazy<Keypad>(GetKeypad);
     }
     
@@ -116,12 +116,12 @@ public sealed class Chip
             : new Keypad();
     }
 
-    private static Memory.ReadWriteMemory GetMemory()
+    private static ReadWriteMemory GetMemory()
     {
-        return new Memory.ReadWriteMemory().Init();
+        return new ReadWriteMemory().Init();
     }
 
-    public Memory.ReadWriteMemory ReadWriteMemory => _memory.Value;
+    public ReadWriteMemory Memory => _memory.Value;
 
     public Registers Registers => _registers;
 
@@ -142,6 +142,6 @@ public sealed class Chip
             ? Convert.ToHexString(BitConverter.GetBytes(Opcode.Value).Reverse().ToArray())
             : "____";
 
-        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {ReadWriteMemory.BytesInMemory}B";
+        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
     }
 }

@@ -3,6 +3,7 @@ namespace ChipEight.Machine.Input;
 public sealed class Keypad
 {
     private readonly IRemoteKeyPad _remoteKeyPad;
+    private readonly bool[] _keys = new bool[16];
     
     public Keypad()
     {
@@ -14,9 +15,12 @@ public sealed class Keypad
         _remoteKeyPad = remoteKeyPad;
     }
 
-    private readonly bool[] _keys = new bool[16];
-    
-    public byte WaitForKeyPress()
+    public bool IsLastKeyPressed()
+    {
+        return false;
+    }
+
+    public byte GetLastKeyPressed()
     {
         return 0x00;
     }

@@ -423,9 +423,9 @@ public class InstructionsTests
         
         chip.Registers.V[0].ShouldBe((byte) 0xFE);
         chip.Registers.I.ShouldBe((ushort) 0x250);
-        chip.ReadWriteMemory.Raw[chip.Registers.I].ShouldBe((byte) 2);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 1].ShouldBe((byte) 5);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 2].ShouldBe((byte) 4);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 2);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 5);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 4);
     }
     
     [Fact]
@@ -447,9 +447,9 @@ public class InstructionsTests
         chip.Registers.V[1].ShouldBe((byte) 0xEF);
         chip.Registers.V[2].ShouldBe((byte) 0xFF);
         chip.Registers.I.ShouldBe((ushort) 0x250);
-        chip.ReadWriteMemory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
     }
     
     [Fact]
@@ -475,9 +475,9 @@ public class InstructionsTests
         chip.Registers.V[1].ShouldBe((byte) 0xEF);
         chip.Registers.V[2].ShouldBe((byte) 0xFF);
         chip.Registers.I.ShouldBe((ushort) 0x250);
-        chip.ReadWriteMemory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
-        chip.ReadWriteMemory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
+        chip.Memory.Raw[chip.Registers.I].ShouldBe((byte) 0xFE);
+        chip.Memory.Raw[chip.Registers.I + 1].ShouldBe((byte) 0xEF);
+        chip.Memory.Raw[chip.Registers.I + 2].ShouldBe((byte) 0xFF);
     }
     
     [Fact]

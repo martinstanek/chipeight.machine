@@ -11,8 +11,14 @@ public sealed class InstructionWaitForKeyPress : Instruction
     
     public override void Execute(ushort opcode)
     {
-        var reg = (opcode & 0x0F00) >> 8;
+        if (!Chip.Keypad.IsLastKeyPressed())
+        {
+            Chip.Registers.Pc -= 2;
+            return;
+        }
 
-        Chip.Registers.V[reg] = Chip.Keypad.WaitForKeyPress(); // TODO: implement
+        var reg = (opcode & 0x0F00) >> 8;
+        
+        Chip.Registers.V[reg] = Chip.Keypad.GetLastKeyPressed();
     }
 }
