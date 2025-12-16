@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using ChipEight.Machine.Input;
 using ChipEight.Machine.Output;
 
 namespace ChipEight.Machine;
@@ -14,10 +15,11 @@ public sealed class Chip
     private readonly Lazy<InstructionSet> _instructionSet;
     private readonly Lazy<Display> _display;
     private readonly Lazy<Memory> _memory;
+    private readonly Lazy<Keypad> _keypad;
     private readonly Registers _registers = new();
-    private readonly Keypad _keypad = new();
     private readonly Random _random = new();
     private IRemoteDisplay? _remoteDisplay;
+    private IRemoteKeyPad? _remoteKeyPad;
     private bool _shallRun = true;
     
     public Chip()
@@ -25,6 +27,7 @@ public sealed class Chip
         _instructionSet = new Lazy<InstructionSet>(() => GetInstructionSet(this));
         _display = new Lazy<Display>(GetDisplay);
         _memory = new Lazy<Memory>(GetMemory);
+        _keypad = new Lazy<Keypad>(GetKeypad);
     }
     
     public Chip Load(byte[] program)
@@ -36,8 +39,6 @@ public sealed class Chip
 
     public Chip Run(ushort cycles)
     {
-        _shallRun = true;
-        
         for (var c = 0; c < cycles; c++)
         {
             Step();
@@ -72,6 +73,15 @@ public sealed class Chip
         return this;
     }
 
+    public Chip WithRemoteKeyPad(string url)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+
+        _remoteKeyPad = new KeyPadClient(url);
+
+        return this;
+    }
+
     public void Step()
     {
         Opcode = _memory.Value.GetOpcode(_registers.Pc);
@@ -98,6 +108,13 @@ public sealed class Chip
             : new Display();
     }
 
+    private Keypad GetKeypad()
+    {
+        return _remoteKeyPad is not null
+            ? new Keypad(_remoteKeyPad)
+            : new Keypad();
+    }
+
     private static Memory GetMemory()
     {
         return new Memory().Init();
@@ -109,7 +126,7 @@ public sealed class Chip
 
     public Display Display => _display.Value;
 
-    public Keypad Keypad => _keypad;
+    public Keypad Keypad => _keypad.Value;
 
     public Random Random => _random;
 
@@ -224,18 +241,6 @@ public sealed class Registers
     }
 
     public byte[] V => _general;
-}
-
-public sealed class Keypad
-{
-    private readonly bool[] _keys = new bool[16];
-    
-    public byte WaitForKeyPress()
-    {
-        return 0x00;
-    }
-
-    public bool[] Keys => _keys;
 }
 
 public sealed class InstructionSet
