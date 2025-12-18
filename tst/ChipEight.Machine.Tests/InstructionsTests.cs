@@ -5,8 +5,6 @@ namespace ChipEight.Machine.Tests;
 
 public class InstructionsTests
 {
-    // TODO: all the registers shift from 0 one as default
-    
     [Fact]
     public void Chip_Basic()
     {

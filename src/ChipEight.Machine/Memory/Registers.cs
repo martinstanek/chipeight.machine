@@ -1,3 +1,6 @@
+using System;
+using ChipEight.Machine.Exceptions;
+
 namespace ChipEight.Machine.Memory;
 
 public sealed class Registers
@@ -10,8 +13,17 @@ public sealed class Registers
     private byte _dt = 0;
     private byte _st = 0;
 
-    public void Push(ushort value) => _stack[_sp++] = value;
-    
+    public void Push(ushort value)
+    {
+        if (_sp + 1 >= _stack.Length)
+        {
+            Console.WriteLine("Stack Overflow");
+            throw new ChipStackOverflowException();
+        }
+
+        _stack[_sp++] = value;
+    }
+
     public ushort Pop() => _stack[--_sp];
     
     public ushort I

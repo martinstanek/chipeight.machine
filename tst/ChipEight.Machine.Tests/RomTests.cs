@@ -62,6 +62,7 @@ public sealed class RomTests
 
     private static Chip GetCip()
     {
-        return new Chip().WithRemoteDisplay("http://10.0.1.106:8090");
+        //return new Chip().WithRemoteDisplay("http://127.0.0.1:8090");
+        return new Chip();
     }
 }

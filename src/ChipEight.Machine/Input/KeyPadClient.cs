@@ -40,7 +40,10 @@ public sealed class KeyPadClient : IRemoteKeyPad
 
     private static HttpClient GetHttpClient(string url)
     {
-        var client = new HttpClient();
+        var client = new HttpClient(new HttpClientHandler()
+        {
+            MaxConnectionsPerServer = 1
+        });
 
         client.BaseAddress = new Uri(url);
 

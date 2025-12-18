@@ -16,7 +16,10 @@ public sealed class PixelDisplayClient : IRemoteDisplay
 
     private static HttpClient GetClient(string remoteUrl)
     {
-        var httpClient = new HttpClient
+        var httpClient = new HttpClient(new HttpClientHandler
+        {
+            MaxConnectionsPerServer = 2
+        })
         {
             BaseAddress = new Uri(remoteUrl)
         };
