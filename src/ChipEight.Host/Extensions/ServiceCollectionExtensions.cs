@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ChipEight.Host.Extensions;
@@ -15,7 +16,8 @@ public static class ServiceCollectionExtensions
         var arguments = new Arguments
         {
             RomPath = args[0],
-            RemoteHmiUrl = args.Length > 1 ? args[1] : string.Empty
+            RemoteHmiUrl = args.Length > 1 ? args[1] : string.Empty,
+            DebugMode = args.Any(a => a.Equals("-d") || a.Equals("--debug"))
         };
 
         return services

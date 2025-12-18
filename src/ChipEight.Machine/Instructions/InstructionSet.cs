@@ -58,7 +58,7 @@ public sealed class InstructionSet
         _set[index].Add(instruction);
     }
     
-    public void Execute(ushort opcode)
+    public bool Execute(ushort opcode)
     {
         var high = (byte) (opcode >> 12);
         var instructions = _set[high];
@@ -66,9 +66,11 @@ public sealed class InstructionSet
 
         if (instruction is null)
         {
-            throw new InvalidOperationException($"Unknown opcode: 0x{opcode:X4}");
+            return false;
         }
 
         instruction.Execute(opcode);
+
+        return true;
     }
 }

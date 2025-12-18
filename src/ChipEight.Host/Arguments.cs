@@ -5,4 +5,6 @@ public sealed record Arguments
     public required string RomPath { get; init; }
 
     public required string RemoteHmiUrl { get; init; }
+
+    public required bool DebugMode { get; init; }
 }

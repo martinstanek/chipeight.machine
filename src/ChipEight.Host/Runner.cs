@@ -9,10 +9,12 @@ namespace ChipEight.Host;
 
 public class Runner : IHostedService
 {
+    private readonly Arguments _arguments;
     private readonly Lazy<Chip> _chip;
 
     public Runner(Arguments arguments)
     {
+        _arguments = arguments;
         _chip = new Lazy<Chip>(GetChip(arguments.RomPath, arguments.RemoteHmiUrl));
     }
 
@@ -21,7 +23,7 @@ public class Runner : IHostedService
         Console.WriteLine("Chip8");
 
         Task.Factory.StartNew(
-            () => _chip.Value.Run(),
+            () => Run(_arguments.DebugMode, cancellationToken),
             cancellationToken,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default);
@@ -34,6 +36,23 @@ public class Runner : IHostedService
         _chip.Value.Stop();
 
         return Task.CompletedTask;
+    }
+
+    private void Run(bool isDebug, CancellationToken cancellationToken)
+    {
+        if (isDebug)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                _chip.Value.Step();
+                Console.WriteLine(_chip.Value.ToString());
+                Console.ReadLine();
+            }
+            
+            return;
+        }
+
+        _chip.Value.Run();
     }
 
     private static Chip GetChip(string romFile, string remoteHmiUrl)

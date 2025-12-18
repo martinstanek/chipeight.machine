@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using ChipEight.Machine.Exceptions;
 using ChipEight.Machine.Input;
 using ChipEight.Machine.Instructions;
 using ChipEight.Machine.Memory;
@@ -89,7 +90,13 @@ public sealed class Chip
 
         _registers.Pc += 2;
 
-        _instructionSet.Value.Execute(Opcode.Value);
+        if (!_instructionSet.Value.Execute(Opcode.Value))
+        {
+            Console.WriteLine($"Failed to execute opcode: 0x{Opcode:X4}");
+            Console.WriteLine(ToString());
+
+            throw new ChipUnprocessableCodeException();
+        }
     }
 
     public void Stop()
@@ -141,7 +148,8 @@ public sealed class Chip
         var opcodeHex = Opcode != null
             ? Convert.ToHexString(BitConverter.GetBytes(Opcode.Value).Reverse().ToArray())
             : "____";
+        var registers = $"Vx: [{string.Join(',', Registers.V.Select(s => $"{s:X2}"))}]";
 
-        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
+        return $"PC: {programCounterHex}, SP: {stackPointerHex}, I: {memoryRegisterHex}, {registers}, Opcode: {opcodeHex}, Mem: {Memory.BytesInMemory}B";
     }
 }
