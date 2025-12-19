@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Timers;
 using ChipEight.Machine.Exceptions;
 using ChipEight.Machine.Input;
 using ChipEight.Machine.Instructions;
@@ -18,10 +19,13 @@ public sealed class Chip
     private readonly Lazy<ReadWriteMemory> _memory;
     private readonly Lazy<Display> _display;
     private readonly Lazy<Keypad> _keypad;
+    private readonly Lazy<Buzzer> _buzzer;
     private readonly Registers _registers = new();
     private readonly Random _random = new();
+    private readonly System.Timers.Timer _timer;
     private IRemoteDisplay? _remoteDisplay;
     private IRemoteKeyPad? _remoteKeyPad;
+    private IRemoteBuzzer? _remoteBuzzer;
     private bool _shallRun = true;
     
     public Chip()
@@ -30,10 +34,15 @@ public sealed class Chip
         _memory = new Lazy<ReadWriteMemory>(GetMemory);
         _display = new Lazy<Display>(GetDisplay);
         _keypad = new Lazy<Keypad>(GetKeypad);
+        _buzzer = new Lazy<Buzzer>(GetBuzzer);
+        _timer = new System.Timers.Timer();
+        _timer.Interval = 16;
+        _timer.Elapsed += TimerOnElapsed;
     }
-    
+
     public Chip Load(byte[] program)
     {
+        _timer.Start();
         _memory.Value.Load(program, StartAddress);
 
         return this;
@@ -61,6 +70,13 @@ public sealed class Chip
         return this;
     }
 
+    public Chip Run(TimeSpan runFor)
+    {
+        var cancellationTokenSource = new CancellationTokenSource(runFor);
+
+        return Run(cancellationToken: cancellationTokenSource.Token);
+    }
+
     public Chip Run()
     {
         return Run(CancellationToken.None);
@@ -70,7 +86,7 @@ public sealed class Chip
     {
         ArgumentException.ThrowIfNullOrEmpty(url);
         
-        _remoteDisplay = new PixelDisplayClient(url);
+        _remoteDisplay = new RemoteDisplay(url);
 
         return this;
     }
@@ -80,6 +96,15 @@ public sealed class Chip
         ArgumentException.ThrowIfNullOrEmpty(url);
 
         _remoteKeyPad = new KeyPadClient(url);
+
+        return this;
+    }
+
+    public Chip WithRemoteBuzzer(string url)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+
+        _remoteBuzzer = new RemoteBuzzer(url);
 
         return this;
     }
@@ -102,6 +127,7 @@ public sealed class Chip
     public void Stop()
     {
         _shallRun = false;
+        _timer.Stop();
     }
 
     private static InstructionSet GetInstructionSet(Chip chip)
@@ -123,6 +149,31 @@ public sealed class Chip
             : new Keypad();
     }
 
+    private Buzzer GetBuzzer()
+    {
+        return _remoteBuzzer is not null
+            ? new Buzzer(_remoteBuzzer)
+            : new Buzzer();
+    }
+    
+    private void TimerOnElapsed(object? sender, ElapsedEventArgs e)
+    {
+        if (Registers.Dt > 0)
+        {
+            Registers.Dt--;
+        }
+        
+        if (Registers.St > 0)
+        {
+            Buzzer.On();
+            Registers.St--;
+        }
+        else
+        {
+            Buzzer.Off();    
+        }
+    }
+
     private static ReadWriteMemory GetMemory()
     {
         return new ReadWriteMemory().Init();
@@ -135,6 +186,8 @@ public sealed class Chip
     public Display Display => _display.Value;
 
     public Keypad Keypad => _keypad.Value;
+
+    public Buzzer Buzzer => _buzzer.Value;
 
     public Random Random => _random;
 

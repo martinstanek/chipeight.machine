@@ -3,11 +3,11 @@ using System.Net.Http;
 
 namespace ChipEight.Machine.Output;
 
-public sealed class PixelDisplayClient : IRemoteDisplay
+public sealed class RemoteDisplay : IRemoteDisplay
 {
     private readonly Lazy<HttpClient> _httpClient;
 
-    public PixelDisplayClient(string remoteUrl)
+    public RemoteDisplay(string remoteUrl)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteUrl);
 

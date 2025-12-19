@@ -62,7 +62,7 @@ public class Runner : IHostedService
         var rom = File.ReadAllBytes(romFile);
 
         return Uri.TryCreate(remoteHmiUrl, UriKind.Absolute, out _)
-            ? new Chip().Load(rom).WithRemoteDisplay(remoteHmiUrl).WithRemoteKeyPad(remoteHmiUrl)
+            ? new Chip().Load(rom).WithRemoteDisplay(remoteHmiUrl).WithRemoteKeyPad(remoteHmiUrl).WithRemoteBuzzer(remoteHmiUrl)
             : new Chip().Load(rom);
     }
 }

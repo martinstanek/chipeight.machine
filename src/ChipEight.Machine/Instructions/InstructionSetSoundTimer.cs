@@ -13,6 +13,6 @@ public sealed class InstructionSetSoundTimer : Instruction
     {
         var reg = (opcode & 0x0F00) >> 8;
 
-        Chip.Registers.St = Chip.Registers.V[reg]; // TODO: implement
+        Chip.Registers.St = Chip.Registers.V[reg];
     }
 }

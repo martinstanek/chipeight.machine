@@ -13,6 +13,6 @@ public sealed class InstructionGetDelayTimer : Instruction
     {
         var reg = (opcode & 0x0F00) >> 8;
 
-        Chip.Registers.V[reg] = Chip.Registers.Dt; // TODO: implement
+        Chip.Registers.V[reg] = Chip.Registers.Dt;
     }
 }
