@@ -43,7 +43,7 @@ public sealed class RomTests
     {
         var rom = File.ReadAllBytes("./Roms/3-corax+.ch8");
         var chip = GetCip();
-        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         
         chip.Load(rom);
         chip.Run(cancellation.Token);
@@ -54,7 +54,7 @@ public sealed class RomTests
     {
         var rom = File.ReadAllBytes("./Roms/4-flags.ch8");
         var chip = GetCip();
-        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         
         chip.Load(rom);
         chip.Run(cancellation.Token);
