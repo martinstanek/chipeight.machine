@@ -10,7 +10,7 @@ using ChipEight.Machine.Output;
 
 namespace ChipEight.Machine;
 
-public sealed class Chip
+public sealed class Chip : IDisposable
 {
     public const ushort FontSetAddress = 0x050;
     public const ushort StartAddress = 0x200;
@@ -130,6 +130,11 @@ public sealed class Chip
         _timer.Stop();
     }
 
+    public void Dispose()
+    {
+        Stop();
+    }
+    
     private static InstructionSet GetInstructionSet(Chip chip)
     {
         return new InstructionSet().Build(chip);
